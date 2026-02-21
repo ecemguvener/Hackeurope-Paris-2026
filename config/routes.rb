@@ -9,6 +9,18 @@ Rails.application.routes.draw do
   # get "manifest" => "rails/pwa#manifest", as: :pwa_manifest
   # get "service-worker" => "rails/pwa#service_worker", as: :pwa_service_worker
 
+  # Upload flow
+  get "upload", to: "documents#new", as: :upload
+  post "upload", to: "documents#create"
+
+  # Results and collapsed views
+  get "results/:id", to: "documents#results", as: :results
+  post "collapsed/:id", to: "documents#select_version", as: :collapsed
+  get "collapsed/:id", to: "documents#collapsed", as: :collapsed_show
+
+  # Profile
+  get "profile", to: "profiles#show", as: :profile
+
   # Defines the root path route ("/")
   root "pages#home"
 end

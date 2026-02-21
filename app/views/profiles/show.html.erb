@@ -1,0 +1,77 @@
+<div class="w-full max-w-4xl mx-auto py-10 px-4">
+  <div class="text-center mb-10">
+    <h1 class="text-4xl font-bold text-gray-900 mb-2">Your Profile</h1>
+    <p class="text-gray-600">Reading preferences and document history.</p>
+  </div>
+
+  <%# Preferred Style %>
+  <div class="bg-white rounded-2xl shadow-md border border-gray-200 p-6 mb-8">
+    <h2 class="text-lg font-bold text-gray-900 mb-3">Preferred Style</h2>
+    <% if @user.preferred_style.present? %>
+      <div class="flex items-center gap-3">
+        <span class="inline-block bg-indigo-100 text-indigo-700 font-semibold px-4 py-2 rounded-lg text-lg">
+          <%= @user.preferred_style %>
+        </span>
+      </div>
+    <% else %>
+      <p class="text-gray-500">No preference saved yet — <%= link_to "upload a document", upload_path, class: "text-indigo-600 font-medium hover:text-indigo-500" %> to get started.</p>
+    <% end %>
+  </div>
+
+  <%# Accessibility Profile %>
+  <% if @user.profile.present? && @user.profile.keys.any? %>
+    <div class="bg-white rounded-2xl shadow-md border border-gray-200 p-6 mb-8">
+      <h2 class="text-lg font-bold text-gray-900 mb-4">Accessibility Profile</h2>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <% @user.profile.each do |key, value| %>
+          <div class="flex items-center justify-between bg-gray-50 rounded-lg px-4 py-3">
+            <span class="text-sm text-gray-600 font-medium"><%= key.to_s.titleize %></span>
+            <span class="text-sm font-semibold text-gray-900"><%= value.to_s %></span>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+
+  <%# Document History %>
+  <div class="bg-white rounded-2xl shadow-md border border-gray-200 p-6">
+    <h2 class="text-lg font-bold text-gray-900 mb-4">Document History</h2>
+    <% if @documents.any? %>
+      <div class="divide-y divide-gray-100">
+        <% @documents.each do |document| %>
+          <div class="flex items-center justify-between py-4">
+            <div>
+              <p class="font-medium text-gray-900">
+                <%= document.file.attached? ? document.file.filename : "Document ##{document.id}" %>
+              </p>
+              <p class="text-sm text-gray-500">
+                Uploaded <%= document.created_at.strftime("%b %d, %Y at %l:%M %p") %>
+              </p>
+            </div>
+            <div class="flex items-center gap-3">
+              <% if document.version_selected? && document.selected_style %>
+                <span class="text-xs bg-green-100 text-green-700 font-medium px-2 py-1 rounded-full">
+                  <%= document.selected_style[:title] %>
+                </span>
+                <%= link_to "View", collapsed_show_path(document),
+                      class: "text-sm text-indigo-600 font-medium hover:text-indigo-500" %>
+              <% else %>
+                <span class="text-xs bg-gray-100 text-gray-500 font-medium px-2 py-1 rounded-full">
+                  Not yet chosen
+                </span>
+                <%= link_to "View", results_path(document),
+                      class: "text-sm text-indigo-600 font-medium hover:text-indigo-500" %>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    <% else %>
+      <div class="text-center py-8">
+        <p class="text-gray-500 mb-4">No documents yet — upload your first one!</p>
+        <%= link_to "Upload a Document", upload_path,
+              class: "inline-block text-white font-semibold py-2 px-6 rounded-xl bg-indigo-600 hover:bg-indigo-500 transition-colors" %>
+      </div>
+    <% end %>
+  </div>
+</div>

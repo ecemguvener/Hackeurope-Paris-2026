@@ -4,4 +4,15 @@ class ApplicationController < ActionController::Base
 
   # Changes to the importmap will invalidate the etag for HTML responses
   stale_when_importmap_changes
+
+  private
+
+  # MVP: hardcoded demo user (no auth)
+  def current_user
+    @current_user ||= User.find_or_create_by!(name: "Demo User") do |user|
+      user.profile = {}
+      user.superposition_states = {}
+    end
+  end
+  helper_method :current_user
 end
