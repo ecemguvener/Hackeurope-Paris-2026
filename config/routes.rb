@@ -18,6 +18,9 @@ Rails.application.routes.draw do
   post "collapsed/:id", to: "documents#select_version", as: :collapsed
   get "collapsed/:id", to: "documents#collapsed", as: :collapsed_show
 
+  # Text-to-speech generation
+  post "speech/:id", to: "documents#generate_speech", as: :generate_speech
+
   # Profile
   get "profile", to: "profiles#show", as: :profile
 

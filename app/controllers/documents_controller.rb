@@ -4,6 +4,7 @@ class DocumentsController < ApplicationController
     application/pdf
     image/png
     image/jpeg
+    image/webp
   ].freeze
 
   MAX_FILE_SIZE = 5.megabytes
@@ -33,8 +34,9 @@ class DocumentsController < ApplicationController
     end
 
     @document.file.attach(uploaded_file)
-    @document.extracted_text = extract_text(uploaded_file)
-    @document.original_content = @document.extracted_text || uploaded_file.original_filename
+    raw, extracted = extract_text(uploaded_file)
+    @document.original_content = raw || uploaded_file.original_filename
+    @document.extracted_text = extracted || @document.original_content
     @document.content_hash = Digest::SHA256.hexdigest(@document.original_content)
 
     if @document.save
@@ -71,16 +73,40 @@ class DocumentsController < ApplicationController
     redirect_to results_path(@document) unless @document.version_selected?
   end
 
+  def generate_speech
+    @document = current_user.documents.find(params[:id])
+    voice     = params[:voice].presence || TTSService::DEFAULT_VOICE
+    text      = @document.selected_content.presence || @document.extracted_text
+
+    unless text.present?
+      redirect_to collapsed_show_path(@document), alert: "No text available to generate speech from."
+      return
+    end
+
+    result = TTSService.speak(text, voice: voice)
+    @document.update!(audio_url: result.audio_url)
+    redirect_to collapsed_show_path(@document), notice: "Speech generated successfully."
+  rescue KeyError => e
+    redirect_to collapsed_show_path(@document), alert: e.message
+  rescue => e
+    Rails.logger.error("TTSService failed: #{e.message}")
+    redirect_to collapsed_show_path(@document), alert: "Speech generation failed: #{e.message}"
+  end
+
   private
 
+  # Returns [raw_text, clean_text] for non-plain-text files, or [text, text] for .txt.
   def extract_text(uploaded_file)
-    case uploaded_file.content_type
-    when "text/plain"
+    if uploaded_file.content_type == "text/plain"
       uploaded_file.rewind
-      uploaded_file.read
-    else
-      # PDF and image text extraction deferred to AI agent integration
-      nil
+      text = uploaded_file.read
+      return [ text, text ]
     end
+
+    result = TextExtractor.call(uploaded_file.tempfile.path)
+    [ result.raw_text, result.clean_text ]
+  rescue => e
+    Rails.logger.error("TextExtractor failed: #{e.message}")
+    [ nil, nil ]
   end
 end
