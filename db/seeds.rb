@@ -10,7 +10,7 @@ User.find_or_create_by!(name: "Demo User") do |user|
     highlight_keywords: true
   }
   user.superposition_states = {
-    short_form: { intensity: "minimal", transformations: ["spacing"] },
+    short_form: { intensity: "minimal", transformations: [ "spacing" ] },
     long_form: { intensity: "moderate", transformations: %w[simplify bullets spacing] },
     technical: { intensity: "maximum", transformations: %w[simplify jargon bullets restructure] }
   }
