@@ -1,0 +1,106 @@
+<%
+  card_colors = [
+    { accent: "from-blue-500 to-blue-600", header_bg: "bg-blue-50", header_text: "text-blue-900", header_sub: "text-blue-600", toggle_border: "border-blue-200", toggle_text: "text-blue-600", toggle_hover: "hover:bg-blue-50", btn_bg: "bg-gradient-to-r from-blue-600 to-blue-500", btn_hover: "hover:from-blue-500 hover:to-blue-400", ring: "focus:ring-blue-500" },
+    { accent: "from-emerald-500 to-emerald-600", header_bg: "bg-emerald-50", header_text: "text-emerald-900", header_sub: "text-emerald-600", toggle_border: "border-emerald-200", toggle_text: "text-emerald-600", toggle_hover: "hover:bg-emerald-50", btn_bg: "bg-gradient-to-r from-emerald-600 to-emerald-500", btn_hover: "hover:from-emerald-500 hover:to-emerald-400", ring: "focus:ring-emerald-500" },
+    { accent: "from-amber-500 to-amber-600", header_bg: "bg-amber-50", header_text: "text-amber-900", header_sub: "text-amber-600", toggle_border: "border-amber-200", toggle_text: "text-amber-600", toggle_hover: "hover:bg-amber-50", btn_bg: "bg-gradient-to-r from-amber-600 to-amber-500", btn_hover: "hover:from-amber-500 hover:to-amber-400", ring: "focus:ring-amber-500" },
+    { accent: "from-purple-500 to-purple-600", header_bg: "bg-purple-50", header_text: "text-purple-900", header_sub: "text-purple-600", toggle_border: "border-purple-200", toggle_text: "text-purple-600", toggle_hover: "hover:bg-purple-50", btn_bg: "bg-gradient-to-r from-purple-600 to-purple-500", btn_hover: "hover:from-purple-500 hover:to-purple-400", ring: "focus:ring-purple-500" }
+  ]
+  delays = ["delay-100", "delay-200", "delay-300", "delay-400"]
+%>
+
+<div class="w-full max-w-7xl mx-auto py-10 px-4">
+  <div class="text-center mb-10 animate-fade-in">
+    <h1 class="text-4xl font-bold text-gray-900 mb-2">Transformation Results</h1>
+    <p class="text-gray-600">Compare 4 transformation styles and pick the one that works best for you.</p>
+  </div>
+
+  <% if @document.transformations_ready? %>
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-10"
+         data-controller="collapse">
+      <% @document.transformation_versions.each_with_index do |version, index| %>
+        <% colors = card_colors[index] %>
+        <div class="bg-white rounded-2xl shadow-md border border-gray-200 flex flex-col overflow-hidden hover-lift animate-fade-in-up <%= delays[index] %>"
+             data-controller="toggle"
+             data-collapse-target="card">
+          <%# Colored accent bar %>
+          <div class="h-1.5 bg-gradient-to-r <%= colors[:accent] %>"></div>
+
+          <%# Card header %>
+          <div class="px-5 pt-5 pb-3 border-b border-gray-100 <%= colors[:header_bg] %>">
+            <h2 class="text-lg font-bold <%= colors[:header_text] %>"><%= version[:title] %></h2>
+            <p class="text-sm <%= colors[:header_sub] %> mt-1"><%= version[:description] %></p>
+          </div>
+
+          <%# Card content %>
+          <div class="px-5 py-4 flex-1">
+            <div data-toggle-target="transformed" class="prose prose-sm max-w-none text-gray-800">
+              <%= simple_format(version[:content] || "Awaiting transformation...") %>
+            </div>
+            <div data-toggle-target="original" class="hidden prose prose-sm max-w-none bg-amber-50 rounded-lg p-3 text-gray-700">
+              <%= simple_format(@document.original_content || @document.extracted_text || "No original content available.") %>
+            </div>
+          </div>
+
+          <%# Card actions %>
+          <div class="px-5 pb-5 mt-auto space-y-2">
+            <button data-toggle-target="button"
+                    data-action="toggle#toggle"
+                    class="w-full text-sm <%= colors[:toggle_text] %> font-medium py-2 px-4 rounded-lg border <%= colors[:toggle_border] %> <%= colors[:toggle_hover] %> transition-colors focus:outline-none focus:ring-2 <%= colors[:ring] %> focus:ring-offset-2">
+              Show Original
+            </button>
+            <%= link_to collapsed_path(@document, version: index + 1),
+                  class: "block w-full text-center text-sm text-white font-semibold py-2 px-4 rounded-lg #{colors[:btn_bg]} #{colors[:btn_hover]} transition-all focus:outline-none focus:ring-2 #{colors[:ring]} focus:ring-offset-2",
+                  data: { turbo_method: :post, action: "click->collapse#select" } do %>
+              Pick This Version
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  <% else %>
+    <%# Placeholder state when transformations aren't ready %>
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-10">
+      <% Document::TRANSFORMATION_STYLES.each_with_index do |style, index| %>
+        <% colors = card_colors[index] %>
+        <div class="bg-white rounded-2xl shadow-md border border-gray-200 flex flex-col overflow-hidden animate-fade-in-up <%= delays[index] %>">
+          <div class="h-1.5 bg-gradient-to-r <%= colors[:accent] %>"></div>
+          <div class="px-5 pt-5 pb-3 border-b border-gray-100 <%= colors[:header_bg] %>">
+            <h2 class="text-lg font-bold <%= colors[:header_text] %>"><%= style[:title] %></h2>
+            <p class="text-sm <%= colors[:header_sub] %> mt-1"><%= style[:description] %></p>
+          </div>
+          <div class="px-5 py-4 flex-1 flex items-center justify-center">
+            <div class="text-center py-8">
+              <div class="inline-block animate-pulse">
+                <div class="h-3 bg-gray-200 rounded w-48 mb-3"></div>
+                <div class="h-3 bg-gray-200 rounded w-40 mb-3"></div>
+                <div class="h-3 bg-gray-200 rounded w-44 mb-3"></div>
+                <div class="h-3 bg-gray-200 rounded w-36"></div>
+              </div>
+              <p class="text-sm text-gray-400 mt-4">Processing transformation...</p>
+            </div>
+          </div>
+          <div class="px-5 pb-5 mt-auto">
+            <button disabled class="w-full text-sm text-gray-400 font-semibold py-2 px-4 rounded-lg bg-gray-100 cursor-not-allowed">
+              Pick This Version
+            </button>
+          </div>
+        </div>
+      <% end %>
+    </div>
+
+    <%# Show original content below %>
+    <% if @document.original_content.present? || @document.extracted_text.present? %>
+      <div class="max-w-3xl mx-auto bg-white rounded-2xl shadow-md border border-gray-200 p-6">
+        <h2 class="text-lg font-bold text-gray-900 mb-3">Original Content</h2>
+        <div class="prose prose-sm max-w-none text-gray-700">
+          <%= simple_format(@document.extracted_text || @document.original_content) %>
+        </div>
+      </div>
+    <% end %>
+  <% end %>
+
+  <div class="text-center mt-8">
+    <%= link_to "Upload Another Document", upload_path,
+          class: "text-indigo-600 font-medium hover:text-indigo-500 transition-colors" %>
+  </div>
+</div>

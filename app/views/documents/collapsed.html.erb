@@ -1,0 +1,115 @@
+<div class="w-full max-w-3xl mx-auto py-10 px-4">
+  <div class="text-center mb-8">
+    <%# Celebration checkmark %>
+    <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-green-400 to-emerald-500 shadow-lg shadow-green-500/30 mb-4 animate-celebrate">
+      <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+      </svg>
+    </div>
+    <h1 class="text-4xl font-bold text-gray-900 mb-2 animate-fade-in-up delay-100">Your Optimized Content</h1>
+    <% if @document.selected_style %>
+      <p class="text-lg text-indigo-600 font-semibold animate-fade-in-up delay-200">You chose: <%= @document.selected_style[:title] %></p>
+    <% end %>
+  </div>
+
+  <%# Selected transformation displayed prominently %>
+  <div class="bg-white rounded-2xl shadow-lg border border-indigo-200 overflow-hidden mb-6 animate-fade-in-up delay-300" data-controller="toggle">
+    <div class="bg-gradient-to-r from-indigo-500 to-purple-500 px-6 py-4">
+      <% if @document.selected_style %>
+        <h2 class="text-lg font-bold text-white"><%= @document.selected_style[:title] %></h2>
+        <p class="text-sm text-indigo-100"><%= @document.selected_style[:description] %></p>
+      <% end %>
+    </div>
+
+    <div class="px-6 py-5">
+      <div data-toggle-target="transformed" class="prose max-w-none text-gray-800">
+        <%= simple_format(@document.selected_content || "Transformation content will appear here.") %>
+      </div>
+      <div data-toggle-target="original" class="hidden prose max-w-none bg-amber-50 rounded-lg p-4 text-gray-700">
+        <%= simple_format(@document.original_content || @document.extracted_text || "No original content available.") %>
+      </div>
+    </div>
+
+    <div class="px-6 pb-5">
+      <button data-toggle-target="button"
+              data-action="toggle#toggle"
+              class="text-sm text-indigo-600 font-medium py-2 px-4 rounded-lg border border-indigo-200 hover:bg-indigo-50 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+        Show Original
+      </button>
+    </div>
+  </div>
+
+  <%# Text-to-Speech panel %>
+  <div class="bg-white rounded-2xl shadow-md border border-gray-200 p-6 mb-6" data-controller="tts">
+    <div class="flex items-center gap-3 mb-4">
+      <svg class="w-5 h-5 text-indigo-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M15.536 8.464a5 5 0 010 7.072M12 6a7 7 0 010 12M9 9a3 3 0 000 6"/>
+      </svg>
+      <h2 class="text-lg font-bold text-gray-900">Listen to this text</h2>
+    </div>
+
+    <% if @document.audio_url.present? %>
+      <%# Audio player %>
+      <audio data-tts-target="audio"
+             controls
+             class="w-full mb-5 rounded-lg"
+             src="<%= @document.audio_url %>"
+             aria-label="Generated speech audio">
+        Your browser does not support the audio element.
+      </audio>
+
+      <%# Playback speed controls %>
+      <div class="flex items-center gap-2 mb-5" role="group" aria-label="Playback speed">
+        <span class="text-sm text-gray-600 font-medium mr-1">Speed:</span>
+        <% { "Slow" => 0.7, "Normal" => 1.0, "Fast" => 1.3 }.each do |label, rate| %>
+          <button data-action="tts#setSpeed"
+                  data-tts-speed-param="<%= rate %>"
+                  class="text-sm px-3 py-1 rounded-lg border border-gray-200 hover:bg-indigo-50 hover:border-indigo-300 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 <%= rate == 1.0 ? 'bg-indigo-100 border-indigo-400 text-indigo-700' : 'text-gray-700' %>">
+            <%= label %>
+          </button>
+        <% end %>
+      </div>
+
+      <%# Regenerate with a different voice %>
+      <%= form_with url: generate_speech_path(@document), method: :post, class: "flex items-center gap-3 flex-wrap" do |f| %>
+        <label for="voice-select" class="text-sm text-gray-600 font-medium">Change voice:</label>
+        <%= f.select :voice,
+              TTSService::VOICES.keys.map { |v| [ v.capitalize, v ] },
+              {},
+              id: "voice-select",
+              class: "text-sm border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-500" %>
+        <%= f.submit "Regenerate",
+              class: "text-sm text-indigo-600 font-medium py-1.5 px-4 rounded-lg border border-indigo-200 hover:bg-indigo-50 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2" %>
+      <% end %>
+
+    <% else %>
+      <%# Generate speech form %>
+      <p class="text-sm text-gray-500 mb-4">
+        Convert the text above into natural-sounding audio with ElevenLabs.
+        Speed can be adjusted after generation.
+      </p>
+
+      <%= form_with url: generate_speech_path(@document), method: :post, class: "flex items-center gap-3 flex-wrap" do |f| %>
+        <label for="voice-select" class="text-sm text-gray-600 font-medium">Voice:</label>
+        <%= f.select :voice,
+              TTSService::VOICES.keys.map { |v| [ v.capitalize, v ] },
+              {},
+              id: "voice-select",
+              class: "text-sm border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-500" %>
+        <%= f.submit "Generate Speech",
+              class: "text-sm text-white font-semibold py-2 px-5 rounded-lg bg-indigo-600 hover:bg-indigo-500 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2" %>
+      <% end %>
+
+      <p class="text-xs text-gray-400 mt-3">Powered by ElevenLabs</p>
+    <% end %>
+  </div>
+
+  <%# Navigation %>
+  <div class="flex items-center justify-between animate-fade-in-up delay-400">
+    <%= link_to "Back to All Versions", results_path(@document),
+          class: "text-indigo-600 font-medium hover:text-indigo-500 transition-colors" %>
+    <%= link_to "Upload New Document", upload_path,
+          class: "inline-block text-white font-semibold py-2 px-6 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 shadow-lg hover:shadow-xl transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2" %>
+  </div>
+</div>

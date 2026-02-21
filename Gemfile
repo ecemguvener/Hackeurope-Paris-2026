@@ -43,7 +43,13 @@ gem "thruster", require: false
 gem "image_processing", "~> 1.2"
 
 # Environment variable management
-gem "dotenv-rails", groups: [:development, :test]
+gem "dotenv-rails", groups: [ :development, :test ]
+
+# Claude API client for vision-based text extraction
+gem "anthropic"
+
+# PDF text-layer extraction
+gem "pdf-reader"
 
 group :development, :test do
   # See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem
@@ -60,6 +66,9 @@ group :development, :test do
 
   # Testing framework
   gem "rspec-rails"
+
+  # System/feature tests
+  gem "capybara"
 end
 
 group :development do
