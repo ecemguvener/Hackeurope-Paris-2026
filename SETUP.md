@@ -15,6 +15,7 @@ Qlarity transforms documents and web pages into dyslexia-friendly text using Cla
 API keys (free tiers work):
 - [Anthropic API key](https://console.anthropic.com/) — powers text transformation, summarization, and chat
 - [ElevenLabs API key](https://elevenlabs.io/) — powers text-to-speech
+- [Paid.ai API key](https://app.paid.ai/) — usage-based billing (optional; runs in stub mode without it)
 
 ---
 
@@ -37,6 +38,12 @@ Edit `.env` and add your API keys:
 ```
 ANTHROPIC_API_KEY=sk-ant-...
 ELEVENLABS_API_KEY=sk_...
+
+# Optional — Paid.ai billing (omit to run in stub mode)
+PAID_API_URL=https://api.paid.ai
+PAID_API_KEY=your_paid_api_key
+PAID_COMPANY_ID=your_company_id
+PAID_FAIL_OPEN=true
 ```
 
 ## 3. Set up the database
@@ -143,6 +150,57 @@ curl -X POST http://localhost:3000/api/v1/transform \
 
 ---
 
+## Paid.ai Billing Integration
+
+Qlarity integrates with [Paid.ai](https://paid.ai/) for usage-based billing. The integration tracks two event types:
+
+- **`text_extraction`** — recorded when a document is uploaded and processed (tracks pages + characters)
+- **`tts_generation`** — recorded when text-to-speech is generated (tracks characters + estimated audio minutes)
+
+### Stub mode (default)
+
+When `PAID_API_URL` is not set, billing runs in **stub mode**:
+- All requests are allowed (no quota enforcement)
+- Usage events are logged to `log/development.log` with `[BillingService STUB]` prefix
+- The billing dashboard at `/billing` shows a setup guide
+
+### Production mode
+
+1. Sign up at [app.paid.ai](https://app.paid.ai/)
+2. Go to **Agent Integration** → **API Keys** to get your key
+3. Create a **Company** and note the ID
+4. Set all four `PAID_*` variables in `.env`
+5. Restart the server
+
+### Fail-open behavior
+
+By default (`PAID_FAIL_OPEN=true`), if the Paid.ai API is unreachable, requests proceed normally. Set `PAID_FAIL_OPEN=false` in production to block requests when quota can't be verified.
+
+### Testing billing
+
+```bash
+# Check the billing dashboard
+open http://localhost:3000/billing
+
+# Verify stub mode logging after uploading a document
+grep "BillingService" log/development.log
+```
+
+### curl demo (with Paid.ai configured)
+
+```bash
+# The BillingService is called internally by the controllers.
+# Upload a document to trigger text_extraction billing:
+curl -X POST http://localhost:3000/upload \
+  -F "document[file]=@test.txt"
+
+# Generate speech to trigger tts_generation billing:
+curl -X POST http://localhost:3000/speech/1 \
+  -d "voice=rachel"
+```
+
+---
+
 ## Troubleshooting
 
 | Problem | Solution |
@@ -152,3 +210,5 @@ curl -X POST http://localhost:3000/api/v1/transform \
 | TTS fails | Verify `ELEVENLABS_API_KEY` is set in `.env` |
 | `PG::ConnectionBad` | Start PostgreSQL: `brew services start postgresql` |
 | Extension doesn't appear on page | Refresh the page after installing the extension; it only injects on new page loads |
+| Billing shows "Stub Mode" | This is expected if `PAID_API_URL` is not set. Add Paid.ai keys to `.env` to enable real billing |
+| "Quota exceeded" error | Your Paid.ai credits are depleted. Set `PAID_FAIL_OPEN=true` to allow requests anyway, or top up credits |

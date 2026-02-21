@@ -24,6 +24,9 @@ Rails.application.routes.draw do
   # Profile
   get "profile", to: "profiles#show", as: :profile
 
+  # Billing
+  get "billing", to: "billing#show", as: :billing
+
   # Chrome Extension API
   namespace :api do
     namespace :v1 do

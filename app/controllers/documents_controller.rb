@@ -33,6 +33,13 @@ class DocumentsController < ApplicationController
       return render :new, status: :unprocessable_entity
     end
 
+    # Billing: check quota before extraction
+    quota = BillingService.check_quota(current_user, "text_extraction")
+    unless quota[:allowed]
+      flash.now[:alert] = "You've used all your credits. Please upgrade your plan."
+      return render :new, status: :payment_required
+    end
+
     @document.file.attach(uploaded_file)
     raw, extracted = extract_text(uploaded_file)
     @document.original_content = raw || uploaded_file.original_filename
@@ -40,11 +47,25 @@ class DocumentsController < ApplicationController
     @document.content_hash = Digest::SHA256.hexdigest(@document.original_content)
 
     if @document.save
+      # Billing: record extraction usage
+      page_count = uploaded_file.content_type == "application/pdf" ? (PDF::Reader.new(uploaded_file.tempfile.path).page_count rescue 1) : 1
+      char_count = @document.extracted_text.to_s.length
+      BillingService.record_usage(current_user, [
+        {
+          event_name: "text_extraction",
+          data: { pages: page_count, characters: char_count, content_type: uploaded_file.content_type }
+        }
+      ])
+
       redirect_to results_path(@document)
     else
       flash.now[:alert] = "Something went wrong. Please try again."
       render :new, status: :unprocessable_entity
     end
+  rescue BillingService::QuotaExceeded => e
+    @document = Document.new
+    flash.now[:alert] = e.message
+    render :new, status: :payment_required
   end
 
   def results
@@ -83,9 +104,28 @@ class DocumentsController < ApplicationController
       return
     end
 
+    # Billing: check quota before TTS
+    quota = BillingService.check_quota(current_user, "tts_generation")
+    unless quota[:allowed]
+      redirect_to collapsed_show_path(@document), alert: "You've used all your credits. Please upgrade your plan."
+      return
+    end
+
     result = TTSService.speak(text, voice: voice)
     @document.update!(audio_url: result.audio_url)
+
+    # Billing: record TTS usage
+    audio_minutes = (text.length / 1000.0 * 0.4).round(2) # rough estimate
+    BillingService.record_usage(current_user, [
+      {
+        event_name: "tts_generation",
+        data: { characters: text.length, audio_minutes: audio_minutes, voice: voice }
+      }
+    ])
+
     redirect_to collapsed_show_path(@document), notice: "Speech generated successfully."
+  rescue BillingService::QuotaExceeded => e
+    redirect_to collapsed_show_path(@document), alert: e.message
   rescue KeyError => e
     redirect_to collapsed_show_path(@document), alert: e.message
   rescue => e
