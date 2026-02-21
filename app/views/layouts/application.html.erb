@@ -20,19 +20,29 @@
     <%= javascript_importmap_tags %>
   </head>
 
-  <body class="bg-gray-50 min-h-screen">
+  <body class="bg-gradient-to-br from-slate-50 via-white to-indigo-50/30 min-h-screen">
     <%# Skip to main content for keyboard/screen-reader users (WCAG 2.4.1) %>
     <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[60] focus:bg-white focus:px-4 focus:py-2 focus:rounded-lg focus:shadow-lg focus:text-indigo-600 focus:font-semibold">
       Skip to main content
     </a>
 
     <%# Navigation bar %>
-    <nav class="bg-white border-b border-gray-200 fixed top-0 left-0 right-0 z-50" role="navigation" aria-label="Main navigation">
+    <nav class="bg-white/80 backdrop-blur-md shadow-sm border-b border-gray-200/50 fixed top-0 left-0 right-0 z-50" role="navigation" aria-label="Main navigation">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex items-center justify-between h-16">
           <%# Logo %>
           <%= link_to root_path, class: "flex items-center gap-2 group", "aria-label": "Qlarity home" do %>
-            <span class="text-2xl font-bold text-indigo-600 group-hover:text-indigo-500 transition-colors">Qlarity</span>
+            <svg width="32" height="32" viewBox="0 0 512 512" class="flex-shrink-0" aria-hidden="true">
+              <defs>
+                <linearGradient id="nav-logo-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#6366f1"/>
+                  <stop offset="100%" stop-color="#a855f7"/>
+                </linearGradient>
+              </defs>
+              <rect width="512" height="512" rx="96" fill="url(#nav-logo-bg)"/>
+              <text x="256" y="340" text-anchor="middle" font-family="system-ui, sans-serif" font-size="320" font-weight="bold" fill="white">Q</text>
+            </svg>
+            <span class="text-2xl font-bold text-gradient group-hover:opacity-80 transition-opacity">Qlarity</span>
           <% end %>
 
           <%# Nav links %>
