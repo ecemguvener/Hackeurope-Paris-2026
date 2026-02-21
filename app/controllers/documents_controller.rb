@@ -42,6 +42,12 @@ class DocumentsController < ApplicationController
     @document = current_user.documents.find(params[:id])
   end
 
+  def select_version
+    @document = current_user.documents.find(params[:id])
+    @document.update!(selected_version: params[:version].to_i)
+    redirect_to collapsed_show_path(@document)
+  end
+
   def collapsed
     @document = current_user.documents.find(params[:id])
   end
