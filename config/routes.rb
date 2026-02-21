@@ -18,6 +18,9 @@ Rails.application.routes.draw do
   post "collapsed/:id", to: "documents#select_version", as: :collapsed
   get "collapsed/:id", to: "documents#collapsed", as: :collapsed_show
 
+  # Profile
+  get "profile", to: "profiles#show", as: :profile
+
   # Defines the root path route ("/")
   root "pages#home"
 end
