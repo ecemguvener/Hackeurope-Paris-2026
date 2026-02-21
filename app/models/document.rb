@@ -21,4 +21,21 @@ class Document < ApplicationRecord
   def transformations_ready?
     transformations.present? && transformations.values.any? { |v| v["content"].present? }
   end
+
+  def selected_style
+    return nil unless selected_version&.between?(1, TRANSFORMATION_STYLES.length)
+
+    TRANSFORMATION_STYLES[selected_version - 1]
+  end
+
+  def selected_content
+    style = selected_style
+    return nil unless style
+
+    transformations&.dig(style[:key], "content")
+  end
+
+  def version_selected?
+    selected_version.present? && selected_version.positive?
+  end
 end

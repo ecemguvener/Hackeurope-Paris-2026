@@ -130,4 +130,80 @@ RSpec.describe "Documents", type: :request do
       end
     end
   end
+
+  describe "POST /collapsed/:id (select_version)" do
+    let!(:document) do
+      user.documents.create!(
+        original_content: "Original text.",
+        content_hash: "ghi",
+        transformations: {
+          "simplified" => { "content" => "Simple." },
+          "bullet_points" => { "content" => "- Bullet." },
+          "plain_language" => { "content" => "Plain." },
+          "restructured" => { "content" => "Restructured." }
+        }
+      )
+    end
+
+    it "saves the selected version and redirects to collapsed view" do
+      post collapsed_path(document), params: { version: 2 }
+
+      document.reload
+      expect(document.selected_version).to eq(2)
+      expect(response).to redirect_to(collapsed_show_path(document))
+    end
+
+    it "saves the preferred style to the user profile" do
+      post collapsed_path(document), params: { version: 3 }
+
+      user.reload
+      expect(user.preferred_style).to eq("Plain Language")
+    end
+  end
+
+  describe "GET /collapsed/:id" do
+    context "when a version has been selected" do
+      let!(:document) do
+        user.documents.create!(
+          original_content: "Original corporate text.",
+          content_hash: "jkl",
+          selected_version: 1,
+          transformations: {
+            "simplified" => { "content" => "Simplified corporate text." },
+            "bullet_points" => { "content" => "- Bullet." },
+            "plain_language" => { "content" => "Plain." },
+            "restructured" => { "content" => "Restructured." }
+          }
+        )
+      end
+
+      it "renders the collapsed view with the selected version" do
+        get collapsed_show_path(document)
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("You chose: Simplified")
+        expect(response.body).to include("Simplified corporate text.")
+      end
+
+      it "includes original content via toggle" do
+        get collapsed_show_path(document)
+        expect(response.body).to include("Show Original")
+        expect(response.body).to include("Original corporate text.")
+      end
+
+      it "includes navigation links" do
+        get collapsed_show_path(document)
+        expect(response.body).to include("Back to All Versions")
+        expect(response.body).to include("Upload New Document")
+      end
+    end
+
+    context "when no version has been selected" do
+      let!(:document) { user.documents.create!(original_content: "test", content_hash: "mno") }
+
+      it "redirects back to results" do
+        get collapsed_show_path(document)
+        expect(response).to redirect_to(results_path(document))
+      end
+    end
+  end
 end
