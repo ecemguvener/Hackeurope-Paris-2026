@@ -24,6 +24,19 @@ Rails.application.routes.draw do
   # Profile
   get "profile", to: "profiles#show", as: :profile
 
+  # Chrome Extension API
+  namespace :api do
+    namespace :v1 do
+      post "transform", to: "transformations#create"
+      post "tts", to: "tts#create"
+      post "summarize", to: "summaries#create"
+      post "chat", to: "chat#create"
+      get "profile", to: "profiles#show"
+      patch "profile", to: "profiles#update"
+      post "interactions", to: "interactions#create"
+    end
+  end
+
   # Defines the root path route ("/")
   root "pages#home"
 end
