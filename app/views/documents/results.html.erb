@@ -5,10 +5,12 @@
   </div>
 
   <% if @document.transformations_ready? %>
-    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-10">
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-10"
+         data-controller="collapse">
       <% @document.transformation_versions.each_with_index do |version, index| %>
         <div class="bg-white rounded-2xl shadow-md border border-gray-200 flex flex-col overflow-hidden"
-             data-controller="toggle">
+             data-controller="toggle"
+             data-collapse-target="card">
           <%# Card header %>
           <div class="px-5 pt-5 pb-3 border-b border-gray-100">
             <h2 class="text-lg font-bold text-gray-900"><%= version[:title] %></h2>
@@ -34,7 +36,7 @@
             </button>
             <%= link_to collapsed_path(@document, version: index + 1),
                   class: "block w-full text-center text-sm text-white font-semibold py-2 px-4 rounded-lg bg-indigo-600 hover:bg-indigo-500 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2",
-                  data: { turbo_method: :post } do %>
+                  data: { turbo_method: :post, action: "click->collapse#select" } do %>
               Pick This Version
             <% end %>
           </div>
