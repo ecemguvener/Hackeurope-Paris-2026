@@ -9,7 +9,10 @@ class ApplicationController < ActionController::Base
 
   # MVP: hardcoded demo user (no auth)
   def current_user
-    @current_user ||= User.find_by(name: "Demo User")
+    @current_user ||= User.find_or_create_by!(name: "Demo User") do |user|
+      user.profile = {}
+      user.superposition_states = {}
+    end
   end
   helper_method :current_user
 end

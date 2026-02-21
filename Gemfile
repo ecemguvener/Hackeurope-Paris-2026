@@ -60,6 +60,9 @@ group :development, :test do
 
   # Testing framework
   gem "rspec-rails"
+
+  # System/feature tests
+  gem "capybara"
 end
 
 group :development do

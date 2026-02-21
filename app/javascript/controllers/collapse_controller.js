@@ -1,8 +1,9 @@
 import { Controller } from "@hotwired/stimulus"
+import { Turbo } from "@hotwired/turbo-rails"
 
 // Animates the "Pick This Version" selection on the results page.
 // The selected card scales up briefly while sibling cards fade and shrink out,
-// then the form submits after the animation completes.
+// then navigates via Turbo after the animation completes.
 export default class extends Controller {
   static targets = ["card"]
   static values = { duration: { type: Number, default: 500 } }
@@ -14,8 +15,7 @@ export default class extends Controller {
     if (!clickedCard) return
 
     const link = event.target.closest("a")
-    const url = link?.href
-    const method = link?.dataset?.turboMethod
+    if (!link) return
 
     // Animate sibling cards out
     this.cardTargets.forEach((card) => {
@@ -32,28 +32,11 @@ export default class extends Controller {
       }
     })
 
-    // After animation, submit via Turbo or navigate
+    // After animation, let Turbo handle the navigation
     setTimeout(() => {
-      if (method === "post" && url) {
-        const token = document.querySelector("meta[name='csrf-token']")?.content
-        const form = document.createElement("form")
-        form.method = "POST"
-        form.action = url
-        form.style.display = "none"
-
-        if (token) {
-          const input = document.createElement("input")
-          input.type = "hidden"
-          input.name = "authenticity_token"
-          input.value = token
-          form.appendChild(input)
-        }
-
-        document.body.appendChild(form)
-        form.submit()
-      } else if (url) {
-        window.location.href = url
-      }
+      // Remove the event handler temporarily so Turbo processes the click naturally
+      link.removeAttribute("data-action")
+      link.click()
     }, this.durationValue)
   }
 }

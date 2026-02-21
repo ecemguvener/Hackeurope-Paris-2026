@@ -159,6 +159,22 @@ RSpec.describe "Documents", type: :request do
       user.reload
       expect(user.preferred_style).to eq("Plain Language")
     end
+
+    it "rejects an invalid version number and redirects back to results" do
+      post collapsed_path(document), params: { version: 999 }
+
+      document.reload
+      expect(document.selected_version).to be_nil
+      expect(response).to redirect_to(results_path(document))
+    end
+
+    it "rejects version 0 and redirects back to results" do
+      post collapsed_path(document), params: { version: 0 }
+
+      document.reload
+      expect(document.selected_version).to be_nil
+      expect(response).to redirect_to(results_path(document))
+    end
   end
 
   describe "GET /collapsed/:id" do
