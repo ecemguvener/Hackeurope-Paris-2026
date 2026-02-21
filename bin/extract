@@ -1,0 +1,128 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# CLI for text extraction with optional text-to-speech.
+#
+#   bin/extract <file_path> [options]
+#
+# Options:
+#   --speak           Generate speech via ElevenLabs TTS
+#   --voice=NAME      Voice name: rachel (default), aria, roger, sarah, george
+#   --speed=FLOAT     Speaking speed: 0.7 (slow), 1.0 (normal, default), 1.3 (fast)
+#
+# Prints raw, clean, and dyslexia-friendly text to stdout and saves all three
+# variants as .txt files under tmp/extractions/.
+# With --speak, audio is saved to public/audio/ and the playable URL is printed.
+#
+# Requires ANTHROPIC_API_KEY for image and scanned-PDF inputs.
+# Requires ELEVENLABS_API_KEY when --speak is used.
+
+require "optparse"
+require_relative "../config/environment"
+
+options = { speak: false, voice: TTSService::DEFAULT_VOICE, speed: 1.0 }
+
+OptionParser.new do |opts|
+  opts.banner = "Usage: bin/extract <file_path> [options]"
+  opts.separator ""
+  opts.separator "Options:"
+
+  opts.on("--speak", "Generate speech via ElevenLabs TTS") do
+    options[:speak] = true
+  end
+
+  opts.on("--voice=NAME",
+          "Voice: #{TTSService::VOICES.keys.join(", ")} (default: #{TTSService::DEFAULT_VOICE})") do |v|
+    options[:voice] = v
+  end
+
+  opts.on("--speed=FLOAT", Float, "Speaking speed: 0.7=slow, 1.0=normal, 1.3=fast") do |s|
+    options[:speed] = s
+  end
+
+  opts.on("-h", "--help", "Show this help") do
+    puts opts
+    exit
+  end
+end.parse!
+
+file_path = ARGV[0]
+
+if file_path.nil? || file_path.strip.empty?
+  warn "Usage: bin/extract <file_path> [--speak] [--voice=NAME] [--speed=FLOAT]"
+  warn "Supported formats: .png  .jpg  .jpeg  .webp  .pdf"
+  exit 1
+end
+
+unless File.exist?(file_path)
+  warn "Error: file not found: #{file_path}"
+  exit 1
+end
+
+puts "Extracting text from: #{file_path}"
+puts
+
+begin
+  result = TextExtractor.call(file_path)
+rescue ArgumentError => e
+  warn "Error: #{e.message}"
+  exit 1
+rescue KeyError
+  warn "Error: ANTHROPIC_API_KEY is not set. Export it before running this command."
+  exit 1
+end
+
+puts "Method used: #{result.method_used}"
+
+if result.per_page
+  puts "Pages processed: #{result.per_page.length}"
+end
+
+divider = "=" * 60
+
+puts
+puts "#{divider}\nRAW TEXT\n#{divider}"
+puts result.raw_text
+
+puts
+puts "#{divider}\nCLEAN TEXT\n#{divider}"
+puts result.clean_text
+
+puts
+puts "#{divider}\nREADABLE TEXT (dyslexia-friendly)\n#{divider}"
+puts result.readable_text
+
+# Save text outputs
+base    = File.basename(file_path, ".*")
+out_dir = Rails.root.join("tmp", "extractions")
+FileUtils.mkdir_p(out_dir)
+
+{
+  "raw"      => result.raw_text,
+  "clean"    => result.clean_text,
+  "readable" => result.readable_text
+}.each do |variant, text|
+  path = out_dir.join("#{base}_#{variant}.txt")
+  File.write(path, text)
+  puts "\nSaved #{variant}: #{path}"
+end
+
+# Optional speech generation
+if options[:speak]
+  puts
+  puts "#{divider}\nGENERATING SPEECH\n#{divider}"
+  puts "Voice: #{options[:voice]}  Speed: #{options[:speed]}"
+
+  begin
+    tts = TTSService.speak(result.readable_text, voice: options[:voice], speed: options[:speed])
+    audio_path = Rails.root.join("public", tts.audio_url)
+    puts "Audio URL : #{tts.audio_url}"
+    puts "Audio file: #{audio_path}"
+  rescue KeyError => e
+    warn "TTS error: #{e.message}"
+    exit 1
+  rescue => e
+    warn "TTS error: #{e.message}"
+    exit 1
+  end
+end
