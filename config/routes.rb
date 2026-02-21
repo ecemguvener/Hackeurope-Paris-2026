@@ -24,6 +24,9 @@ Rails.application.routes.draw do
   # Profile
   get "profile", to: "profiles#show", as: :profile
 
+  # Billing & usage dashboard
+  get "billing", to: "billing#show", as: :billing
+
   # Defines the root path route ("/")
   root "pages#home"
 end

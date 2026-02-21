@@ -20,26 +20,42 @@ class DocumentsController < ApplicationController
       return render :new, status: :unprocessable_entity
     end
 
-    @document = current_user.documents.build
     uploaded_file = params[:document][:file]
 
     unless ALLOWED_CONTENT_TYPES.include?(uploaded_file.content_type)
       flash.now[:alert] = "File type not supported. Please upload a .txt, .pdf, .png, or .jpg file."
+      @document = Document.new
       return render :new, status: :unprocessable_entity
     end
 
     if uploaded_file.size > MAX_FILE_SIZE
       flash.now[:alert] = "File is too large. Maximum size is 5MB."
+      @document = Document.new
       return render :new, status: :unprocessable_entity
     end
 
+    # Quota check — before doing any expensive work
+    quota = BillingService.check_quota(BillingService.company_id)
+    unless quota.allowed
+      flash.now[:alert] = "Quota exceeded: #{quota.reason}"
+      @document = Document.new
+      return render :new, status: :unprocessable_entity
+    end
+
+    @document = current_user.documents.build
     @document.file.attach(uploaded_file)
-    raw, extracted = extract_text(uploaded_file)
+
+    raw, extracted, pages, characters = extract_text(uploaded_file)
     @document.original_content = raw || uploaded_file.original_filename
-    @document.extracted_text = extracted || @document.original_content
-    @document.content_hash = Digest::SHA256.hexdigest(@document.original_content)
+    @document.extracted_text   = extracted || @document.original_content
+    @document.content_hash     = Digest::SHA256.hexdigest(@document.original_content)
 
     if @document.save
+      BillingService.record_usage(
+        BillingService.company_id,
+        pages:      pages,
+        characters: characters
+      )
       redirect_to results_path(@document)
     else
       flash.now[:alert] = "Something went wrong. Please try again."
@@ -83,8 +99,24 @@ class DocumentsController < ApplicationController
       return
     end
 
+    # Quota check — before calling ElevenLabs
+    quota = BillingService.check_quota(BillingService.company_id)
+    unless quota.allowed
+      redirect_to collapsed_show_path(@document), alert: "Quota exceeded: #{quota.reason}"
+      return
+    end
+
     result = TTSService.speak(text, voice: voice)
     @document.update!(audio_url: result.audio_url)
+
+    # Estimate audio duration: ~150 words/minute at normal reading speed
+    audio_minutes = text.split.length / 150.0
+    BillingService.record_usage(
+      BillingService.company_id,
+      characters:    text.length,
+      audio_minutes: audio_minutes
+    )
+
     redirect_to collapsed_show_path(@document), notice: "Speech generated successfully."
   rescue KeyError => e
     redirect_to collapsed_show_path(@document), alert: e.message
@@ -95,18 +127,20 @@ class DocumentsController < ApplicationController
 
   private
 
-  # Returns [raw_text, clean_text] for non-plain-text files, or [text, text] for .txt.
+  # Returns [raw_text, clean_text, pages, characters] for billing and storage.
   def extract_text(uploaded_file)
     if uploaded_file.content_type == "text/plain"
       uploaded_file.rewind
       text = uploaded_file.read
-      return [ text, text ]
+      return [ text, text, 1, text.length ]
     end
 
-    result = TextExtractor.call(uploaded_file.tempfile.path)
-    [ result.raw_text, result.clean_text ]
+    result     = TextExtractor.call(uploaded_file.tempfile.path)
+    pages      = result.per_page ? result.per_page.length : 1
+    characters = result.raw_text.to_s.length
+    [ result.raw_text, result.clean_text, pages, characters ]
   rescue => e
     Rails.logger.error("TextExtractor failed: #{e.message}")
-    [ nil, nil ]
+    [ nil, nil, 0, 0 ]
   end
 end
