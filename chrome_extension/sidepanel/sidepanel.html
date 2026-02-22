@@ -47,10 +47,20 @@
 
     <div id="transformResult" class="sp-result" style="display:none;">
       <label class="sp-label">Result</label>
-      <div id="transformOutput" class="sp-output"></div>
+      <div id="transformOutput" class="sp-output sp-rendered"></div>
       <div class="sp-actions">
+        <button id="expandBtn" class="sp-btn-action sp-btn-secondary">Read Full Screen</button>
         <button id="copyBtn" class="sp-btn-action sp-btn-secondary">Copy</button>
       </div>
+    </div>
+
+    <!-- Full-screen reading overlay -->
+    <div id="fullscreenReader" class="sp-fullscreen" style="display:none;">
+      <div class="sp-fullscreen-header">
+        <span class="sp-fullscreen-title">Reading Mode</span>
+        <button id="exitFullscreen" class="sp-btn-action sp-btn-secondary">Back</button>
+      </div>
+      <div id="fullscreenContent" class="sp-fullscreen-body sp-rendered"></div>
     </div>
 
     <div id="transformLoading" class="sp-loading" style="display:none;">

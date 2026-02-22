@@ -8,6 +8,7 @@
   let pageContext = {};
   let chatHistory = [];
   let lastTransformResult = '';
+  let lastOriginalText = '';
 
   // ── DOM refs ───────────────────────────────────────────────
   const $ = (id) => document.getElementById(id);
@@ -23,6 +24,12 @@
   const transformOutput = $('transformOutput');
   const transformLoading = $('transformLoading');
   const copyBtn = $('copyBtn');
+
+  // Full-screen reader
+  const expandBtn = $('expandBtn');
+  const fullscreenReader = $('fullscreenReader');
+  const fullscreenContent = $('fullscreenContent');
+  const exitFullscreen = $('exitFullscreen');
 
   // Chat
   const chatMessages = $('chatMessages');
@@ -50,6 +57,84 @@
   checkConnection();
   loadPageContext();
   loadTheme();
+
+  // ── Markdown → HTML parser ────────────────────────────────
+  function renderMarkdown(text) {
+    let html = escapeHtml(text);
+
+    // Headings (### → h3, ## → h2, # → h1)
+    html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+    html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>');
+    html = html.replace(/^# (.+)$/gm, '<h1>$1</h1>');
+
+    // Horizontal rules
+    html = html.replace(/^[-*_]{3,}$/gm, '<hr>');
+
+    // Bold + italic (***text*** or ___text___)
+    html = html.replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>');
+    html = html.replace(/___(.+?)___/g, '<strong><em>$1</em></strong>');
+
+    // Bold (**text** or __text__)
+    html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    html = html.replace(/__(.+?)__/g, '<strong>$1</strong>');
+
+    // Italic (*text* or _text_)
+    html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
+    html = html.replace(/(?<!\w)_(.+?)_(?!\w)/g, '<em>$1</em>');
+
+    // Inline code
+    html = html.replace(/`(.+?)`/g, '<code>$1</code>');
+
+    // Blockquotes
+    html = html.replace(/^&gt; (.+)$/gm, '<blockquote>$1</blockquote>');
+
+    // Unordered lists (- or * at start of line)
+    html = html.replace(/^[\-\*] (.+)$/gm, '<li>$1</li>');
+    html = html.replace(/((?:<li>.*<\/li>\n?)+)/g, '<ul>$1</ul>');
+
+    // Ordered lists (1. 2. etc.)
+    html = html.replace(/^\d+\. (.+)$/gm, '<li>$1</li>');
+    // Wrap consecutive <li> not already in <ul> into <ol>
+    html = html.replace(/<\/ul>\s*<ul>/g, ''); // merge adjacent <ul>
+    html = html.replace(/(?<!<\/ul>)((?:<li>.*<\/li>\n?)+)(?!<\/ol>)/g, (match) => {
+      if (match.includes('<ul>')) return match;
+      return '<ol>' + match + '</ol>';
+    });
+
+    // Paragraphs: double newlines
+    html = html.replace(/\n\n+/g, '</p><p>');
+    // Single newlines → <br>
+    html = html.replace(/\n/g, '<br>');
+
+    // Wrap in paragraph
+    html = '<p>' + html + '</p>';
+
+    // Clean up empty paragraphs and paragraphs wrapping block elements
+    html = html.replace(/<p>\s*<\/p>/g, '');
+    html = html.replace(/<p>(<h[123]>)/g, '$1');
+    html = html.replace(/(<\/h[123]>)<\/p>/g, '$1');
+    html = html.replace(/<p>(<ul>)/g, '$1');
+    html = html.replace(/(<\/ul>)<\/p>/g, '$1');
+    html = html.replace(/<p>(<ol>)/g, '$1');
+    html = html.replace(/(<\/ol>)<\/p>/g, '$1');
+    html = html.replace(/<p>(<blockquote>)/g, '$1');
+    html = html.replace(/(<\/blockquote>)<\/p>/g, '$1');
+    html = html.replace(/<p><hr><\/p>/g, '<hr>');
+    html = html.replace(/<p><br>/g, '<p>');
+    html = html.replace(/<br><\/p>/g, '</p>');
+
+    return html;
+  }
+
+  // ── Full-screen reader toggle ────────────────────────────
+  expandBtn.addEventListener('click', () => {
+    fullscreenContent.innerHTML = renderMarkdown(lastTransformResult);
+    fullscreenReader.style.display = 'flex';
+  });
+
+  exitFullscreen.addEventListener('click', () => {
+    fullscreenReader.style.display = 'none';
+  });
 
   // ── Theme ────────────────────────────────────────────────
   function loadTheme() {
@@ -219,10 +304,12 @@
     try {
       const result = await ApiClient.transform(text, selectedStyle);
       lastTransformResult = result.text;
-      transformOutput.textContent = result.text;
+      lastOriginalText = text;
+
+      transformOutput.innerHTML = renderMarkdown(result.text);
       transformResult.style.display = 'block';
 
-      // Also populate TTS input
+      // Also populate TTS input (plain text for speech)
       ttsInput.value = result.text;
 
       // Save interaction
