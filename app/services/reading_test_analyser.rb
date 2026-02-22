@@ -60,7 +60,7 @@ class ReadingTestAnalyser
     # Find words that are in the original but missing from what they typed
     skipped_words = original_words - retyped_words
 
-    # Return the result as a hash so that we can remmeber the position in the list 
+    # Return the result as a hash so that we can remmeber the position in the list
     # {} is hash
     { skipped_words: skipped_words }
   end
