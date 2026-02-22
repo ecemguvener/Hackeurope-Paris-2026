@@ -40,7 +40,7 @@ class ReadingTestAnalyser
     # Step 4: Parse Claude's response from text into a Ruby hash
     parsed = JSON.parse(result)
 
-    # Step 5: Save the profile to the user in the database so it persists
+    #5: Save the profile to the user in the database so it persists
     user.profile.merge!(parsed)
     user.preferred_style = parsed["recommended_style"]
     user.save
@@ -52,16 +52,17 @@ class ReadingTestAnalyser
   # Helper function: compares what the user typed vs the original sentence
   # Returns a hash with the words they skipped
   def self.analyse_retype(retyped)
-    # Split the original sentence into individual words, lowercased
+    # Split the original sentence into individual words, lowercased ""
     original_words = TEST_SENTENCE.downcase.split
 
-    # Split what the user typed into individual words, lowercased
+    # Split what the user typed into individual words, lowercased so that the comparison is easier (doesn't have to compare lower cased or upper cased)
     retyped_words = retyped.downcase.split
 
     # Find words that are in the original but missing from what they typed
     skipped_words = original_words - retyped_words
 
-    # Return the result as a hash
+    # Return the result as a hash so that we can remmeber the position in the list 
+    # {} is hash 
     { skipped_words: skipped_words }
   end
 
