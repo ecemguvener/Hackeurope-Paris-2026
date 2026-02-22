@@ -4,10 +4,10 @@ require "net/http"
 require "uri"
 require "json"
 
-# HTTP client for the Paid.ai REST API.
+# Billing client backed by the paid_ruby SDK.
 # Handles quota checks, usage recording, and billing dashboard data.
 #
-# Runs in **stub mode** when PAID_API_URL is unset — all requests are allowed
+# Runs in **stub mode** when PAID_API_KEY is unset — all requests are allowed
 # and usage is only logged to Rails logger.
 #
 # Fails open by default (PAID_FAIL_OPEN=true): if the Paid API is unreachable,
@@ -19,21 +19,14 @@ require "json"
 #
 class BillingService
   CACHE_TTL = 60 # seconds
+  CREDIT_BUNDLES_BASE_URL = "https://api.agentpaid.io/api/v1"
 
   class QuotaExceeded < StandardError; end
 
   # ── Configuration ────────────────────────────────────────────
   class << self
-    def api_url
-      ENV["PAID_API_URL"].presence
-    end
-
     def api_key
       ENV["PAID_API_KEY"].presence
-    end
-
-    def company_id
-      ENV["PAID_COMPANY_ID"].presence
     end
 
     def fail_open?
@@ -41,7 +34,7 @@ class BillingService
     end
 
     def stub_mode?
-      api_url.blank?
+      api_key.blank?
     end
 
     # ── Public API ───────────────────────────────────────────
@@ -96,12 +89,11 @@ class BillingService
         {
           event_name: signal[:event_name],
           customer_external_id: external_id,
-          company_id: company_id,
           data: signal[:data] || {}
         }
       end
 
-      response = post("/v1/usage/signals/bulk", { signals: payload })
+      response = client.usage.record_bulk(signals: payload)
       { recorded: signals.size, response: response }
     rescue => e
       Rails.logger.error("[BillingService] record_usage failed: #{e.message}")
@@ -150,6 +142,12 @@ class BillingService
 
     private
 
+    # ── SDK client ─────────────────────────────────────────────
+
+    def client
+      @client ||= Paid::Client.new(token: api_key)
+    end
+
     def external_customer_id(user)
       "qlarity_user_#{user.id}"
     end
@@ -161,20 +159,46 @@ class BillingService
       cached = Rails.cache.read(cache_key)
       return cached if cached
 
-      result = get("/v1/customers/external/#{external_customer_id(user)}")
+      result = client.customers.get_by_external_id(external_id: external_customer_id(user))
+      result = JSON.parse(result.to_json) if result.respond_to?(:to_json) && !result.is_a?(Hash)
       Rails.cache.write(cache_key, result, expires_in: CACHE_TTL.seconds) if result
       result
+    rescue => e
+      return nil if e.message.to_s.include?("404") || e.message.to_s.include?("not found")
+      raise
     end
 
+    # SDK doesn't expose credit bundles yet — use lightweight HTTP fallback.
     def fetch_credit_bundles(user)
       cache_key = "billing:bundles:#{user.id}"
       cached = Rails.cache.read(cache_key)
       return cached if cached
 
-      result = get("/v1/credit-bundles", customer_external_id: external_customer_id(user))
-      bundles = result.is_a?(Array) ? result : (result&.dig("data") || [])
-      Rails.cache.write(cache_key, bundles, expires_in: CACHE_TTL.seconds)
-      bundles
+      uri = URI("#{CREDIT_BUNDLES_BASE_URL}/credit-bundles")
+      uri.query = URI.encode_www_form(customer_external_id: external_customer_id(user))
+
+      http = Net::HTTP.new(uri.host, uri.port)
+      http.use_ssl = true
+      http.open_timeout = 5
+      http.read_timeout = 10
+
+      request = Net::HTTP::Get.new(uri)
+      request["Authorization"] = "Bearer #{api_key}"
+      request["Accept"] = "application/json"
+
+      response = http.request(request)
+
+      case response.code.to_i
+      when 200..299
+        result = JSON.parse(response.body)
+        bundles = result.is_a?(Array) ? result : (result.dig("data") || [])
+        Rails.cache.write(cache_key, bundles, expires_in: CACHE_TTL.seconds)
+        bundles
+      when 404
+        []
+      else
+        raise "Paid.ai credit-bundles API error (HTTP #{response.code}): #{response.body.to_s.truncate(200)}"
+      end
     end
 
     def calculate_remaining(bundles)
@@ -184,55 +208,6 @@ class BillingService
         granted = bundle.dig("granted_amount") || bundle.dig("total") || 0
         used = bundle.dig("used_amount") || bundle.dig("used") || 0
         [ granted - used, 0 ].max
-      end
-    end
-
-    # ── HTTP helpers ──────────────────────────────────────────
-
-    def get(path, params = {})
-      uri = URI("#{api_url}#{path}")
-      uri.query = URI.encode_www_form(params) if params.any?
-      request = Net::HTTP::Get.new(uri)
-      execute(uri, request)
-    end
-
-    def post(path, body)
-      uri = URI("#{api_url}#{path}")
-      request = Net::HTTP::Post.new(uri)
-      request.body = body.to_json
-      execute(uri, request)
-    end
-
-    def execute(uri, request)
-      http = Net::HTTP.new(uri.host, uri.port)
-      http.use_ssl = uri.scheme == "https"
-      http.open_timeout = 5
-      http.read_timeout = 10
-
-      request["Authorization"] = "Bearer #{api_key}"
-      request["Content-Type"] = "application/json"
-      request["Accept"] = "application/json"
-
-      response = with_retry { http.request(request) }
-
-      case response.code.to_i
-      when 200..299
-        JSON.parse(response.body)
-      when 404
-        nil
-      else
-        raise "Paid.ai API error (HTTP #{response.code}): #{response.body.to_s.truncate(200)}"
-      end
-    end
-
-    def with_retry
-      attempts = 0
-      begin
-        yield
-      rescue Net::OpenTimeout, Net::ReadTimeout, Errno::ECONNREFUSED, SocketError => e
-        attempts += 1
-        retry if attempts == 1
-        raise "Paid.ai unreachable after retry: #{e.message}"
       end
     end
 
