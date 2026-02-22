@@ -42,3 +42,4 @@
 
 # Chrome extension signing keys
 chrome_extension/*.pem
+qlarity-extension.zip
