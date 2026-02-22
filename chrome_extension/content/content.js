@@ -111,6 +111,29 @@
     if (existing) existing.remove();
   }
 
+  // ── Reading Overlay (tinted screen filter) ───────────────
+  function applyReadingOverlay(tint) {
+    removeReadingOverlay();
+    if (!tint || tint === 'none') return;
+
+    const el = document.createElement('div');
+    el.id = 'qlarity-reading-overlay';
+    el.className = `tint-${tint}`;
+    document.body.appendChild(el);
+  }
+
+  function removeReadingOverlay() {
+    const existing = document.getElementById('qlarity-reading-overlay');
+    if (existing) existing.remove();
+  }
+
+  // Check for saved overlay on load
+  chrome.storage.sync.get(['readingOverlayTint', 'readingOverlayAuto'], (data) => {
+    if (data.readingOverlayAuto && data.readingOverlayTint && data.readingOverlayTint !== 'none') {
+      applyReadingOverlay(data.readingOverlayTint);
+    }
+  });
+
   // ── Message listener ─────────────────────────────────────
   chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     switch (msg.type) {
@@ -120,6 +143,14 @@
         break;
       case 'REMOVE_OVERLAY':
         removeOverlay();
+        sendResponse({ ok: true });
+        break;
+      case 'APPLY_READING_OVERLAY':
+        applyReadingOverlay(msg.tint);
+        sendResponse({ ok: true });
+        break;
+      case 'REMOVE_READING_OVERLAY':
+        removeReadingOverlay();
         sendResponse({ ok: true });
         break;
       case 'GET_PAGE_TEXT':

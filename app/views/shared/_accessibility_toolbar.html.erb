@@ -1,0 +1,111 @@
+<%# Collapsible accessibility panel — rendered inside the nav %>
+<div data-accessibility-target="panel"
+     class="hidden border-t overflow-hidden transition-all"
+     style="background-color: var(--color-surface, #ffffff); border-color: var(--color-border);">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+    <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-4 items-start">
+
+      <%# Font Family %>
+      <div>
+        <span class="block text-xs font-semibold uppercase tracking-wide mb-2" style="color: var(--color-text-muted);">Font</span>
+        <div class="flex flex-col gap-1">
+          <% [["sans", "Hyperlegible"], ["serif", "Serif"], ["mono", "Mono"], ["open", "OpenDyslexic"]].each do |key, label| %>
+            <button data-action="accessibility#setFont"
+                    data-accessibility-font-param="<%= key %>"
+                    class="text-xs px-2 py-1 rounded border transition-colors text-left accessibility-font-btn"
+                    style="border-color: var(--color-border); color: var(--color-text-secondary);"
+                    data-font-key="<%= key %>">
+              <%= label %>
+            </button>
+          <% end %>
+        </div>
+      </div>
+
+      <%# Text Size %>
+      <div>
+        <span class="block text-xs font-semibold uppercase tracking-wide mb-2" style="color: var(--color-text-muted);">Size</span>
+        <div class="flex flex-col gap-1">
+          <% [["normal", "Normal"], ["large", "Large"], ["xlarge", "X-Large"]].each do |key, label| %>
+            <button data-action="accessibility#setSize"
+                    data-accessibility-size-param="<%= key %>"
+                    class="text-xs px-2 py-1 rounded border transition-colors text-left accessibility-size-btn"
+                    style="border-color: var(--color-border); color: var(--color-text-secondary);"
+                    data-size-key="<%= key %>">
+              <%= label %>
+            </button>
+          <% end %>
+        </div>
+      </div>
+
+      <%# Background Tint %>
+      <div>
+        <span class="block text-xs font-semibold uppercase tracking-wide mb-2" style="color: var(--color-text-muted);">Tint</span>
+        <div class="flex flex-wrap gap-2">
+          <% [["none", "#ffffff", "No tint"], ["cream", "#fffdf0", "Cream"], ["blue", "#dbeafe", "Blue"], ["green", "#dcfce7", "Green"], ["rose", "#ffe4e6", "Rose"]].each do |key, color, title| %>
+            <button data-action="accessibility#setOverlay"
+                    data-accessibility-overlay-param="<%= key %>"
+                    class="w-7 h-7 rounded-full border-2 transition-transform hover:scale-110 accessibility-overlay-btn"
+                    style="background-color: <%= color %>; border-color: var(--color-border);"
+                    title="<%= title %>"
+                    data-overlay-key="<%= key %>">
+            </button>
+          <% end %>
+        </div>
+      </div>
+
+      <%# Dark Mode %>
+      <div>
+        <span class="block text-xs font-semibold uppercase tracking-wide mb-2" style="color: var(--color-text-muted);">Dark Mode</span>
+        <button data-action="accessibility#toggleDarkMode"
+                data-accessibility-target="darkModeBtn"
+                class="text-xs px-3 py-1.5 rounded border transition-colors font-medium"
+                style="border-color: var(--color-border); color: var(--color-text-secondary);">
+          Off
+        </button>
+      </div>
+
+      <%# High Contrast %>
+      <div>
+        <span class="block text-xs font-semibold uppercase tracking-wide mb-2" style="color: var(--color-text-muted);">Contrast</span>
+        <button data-action="accessibility#toggleContrast"
+                data-accessibility-target="contrastBtn"
+                class="text-xs px-3 py-1.5 rounded border transition-colors font-medium"
+                style="border-color: var(--color-border); color: var(--color-text-secondary);">
+          Normal
+        </button>
+      </div>
+
+      <%# Reading Mode %>
+      <div>
+        <span class="block text-xs font-semibold uppercase tracking-wide mb-2" style="color: var(--color-text-muted);">Reading</span>
+        <button data-action="accessibility#toggleReadingMode"
+                data-accessibility-target="readingModeBtn"
+                class="text-xs px-3 py-1.5 rounded border transition-colors font-medium"
+                style="border-color: var(--color-border); color: var(--color-text-secondary);">
+          Standard
+        </button>
+      </div>
+
+      <%# Focus Mode %>
+      <div>
+        <span class="block text-xs font-semibold uppercase tracking-wide mb-2" style="color: var(--color-text-muted);">Focus</span>
+        <button data-action="accessibility#toggleFocusMode"
+                data-accessibility-target="focusModeBtn"
+                class="text-xs px-3 py-1.5 rounded border transition-colors font-medium"
+                style="border-color: var(--color-border); color: var(--color-text-secondary);">
+          Off
+        </button>
+      </div>
+
+      <%# Reset %>
+      <div>
+        <span class="block text-xs font-semibold uppercase tracking-wide mb-2" style="color: var(--color-text-muted);">Reset</span>
+        <button data-action="accessibility#resetAll"
+                class="text-xs px-3 py-1.5 rounded border border-red-300 text-red-600 hover:bg-red-50 transition-colors font-medium">
+          Reset All
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>

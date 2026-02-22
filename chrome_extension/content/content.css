@@ -128,3 +128,28 @@
   white-space: pre-wrap;
   word-wrap: break-word;
 }
+
+/* ── Reading Overlay (tinted screen overlay) ───────────── */
+#qlarity-reading-overlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2147483644;
+  transition: background-color 0.3s;
+}
+
+#qlarity-reading-overlay.tint-cream {
+  background-color: rgba(255, 253, 240, 0.4);
+}
+
+#qlarity-reading-overlay.tint-blue {
+  background-color: rgba(219, 234, 254, 0.3);
+}
+
+#qlarity-reading-overlay.tint-green {
+  background-color: rgba(220, 252, 231, 0.3);
+}
+
+#qlarity-reading-overlay.tint-rose {
+  background-color: rgba(255, 228, 230, 0.25);
+}

@@ -46,6 +46,12 @@ module Api
           :recommended_style,
           :assessment,
           :preferred_style,
+          :theme,
+          :contrast,
+          :overlay_color,
+          :text_size,
+          :focus_mode,
+          :reading_mode,
           style_weights: {}
         ).to_h
       end

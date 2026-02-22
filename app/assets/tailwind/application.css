@@ -1,5 +1,106 @@
 @import "tailwindcss";
 
+/* ── Default font, weight & spacing: OpenDyslexic everywhere ─ */
+html, body {
+  font-family: "Open Dyslexic", "OpenDyslexic", "Atkinson Hyperlegible", "Verdana", sans-serif !important;
+  font-weight: 500 !important;
+  line-height: 1.8 !important;
+  letter-spacing: 0.01em;
+}
+
+/* ── Protect white text on dark backgrounds ──────────────── */
+.text-white { color: #ffffff !important; }
+
+/* ── Force high-contrast text in light mode (post-Tailwind) ── */
+.text-gray-400 { color: #1f2937 !important; }
+.text-gray-500 { color: #111827 !important; }
+.text-gray-600 { color: #111827 !important; }
+.text-gray-700 { color: #111827 !important; }
+.text-gray-800 { color: #111827 !important; }
+.text-gray-900 { color: #111827 !important; }
+
+/* ── Dark mode: force bright text (post-Tailwind) ──────────── */
+[data-theme="dark"] .text-gray-400 { color: #cbd5e1 !important; }
+[data-theme="dark"] .text-gray-500 { color: #e2e8f0 !important; }
+[data-theme="dark"] .text-gray-600 { color: #e2e8f0 !important; }
+[data-theme="dark"] .text-gray-700 { color: #f1f5f9 !important; }
+[data-theme="dark"] .text-gray-800 { color: #f1f5f9 !important; }
+[data-theme="dark"] .text-gray-900 { color: #f8fafc !important; }
+[data-theme="dark"] .bg-white { background-color: var(--color-card-bg, #1e2746) !important; color: #f1f5f9; }
+
+/* ── High contrast: maximum readability ────────────────────── */
+[data-contrast="high"] .text-gray-400,
+[data-contrast="high"] .text-gray-500,
+[data-contrast="high"] .text-gray-600,
+[data-contrast="high"] .text-gray-700,
+[data-contrast="high"] .text-gray-800,
+[data-contrast="high"] .text-gray-900 { color: #ffffff !important; }
+[data-contrast="high"] .bg-white { background-color: #111111 !important; color: #ffffff; }
+
+/* ── Theme CSS Custom Properties ─────────────────────────── */
+:root {
+  --color-bg: #f8f7f4;
+  --color-bg-secondary: #ffffff;
+  --color-surface: #ffffff;
+  --color-text: #111827;
+  --color-text-secondary: #1f2937;
+  --color-text-muted: #374151;
+  --color-border: rgba(229, 231, 235, 0.8);
+  --color-nav-bg: rgba(255, 255, 255, 0.8);
+  --color-nav-border: rgba(229, 231, 235, 0.5);
+  --color-card-bg: #ffffff;
+  --color-accent: #6366f1;
+  --color-accent-light: #eef2ff;
+  --color-shadow: rgba(0, 0, 0, 0.08);
+  --color-overlay: transparent;
+}
+
+[data-theme="dark"] {
+  --color-bg: #1a1a2e;
+  --color-bg-secondary: #16213e;
+  --color-surface: #1e2746;
+  --color-text: #f1f5f9;
+  --color-text-secondary: #e2e8f0;
+  --color-text-muted: #cbd5e1;
+  --color-border: rgba(74, 85, 104, 0.5);
+  --color-nav-bg: rgba(26, 26, 46, 0.9);
+  --color-nav-border: rgba(74, 85, 104, 0.4);
+  --color-card-bg: #1e2746;
+  --color-accent: #818cf8;
+  --color-accent-light: rgba(99, 102, 241, 0.15);
+  --color-shadow: rgba(0, 0, 0, 0.3);
+  --color-overlay: transparent;
+}
+
+[data-contrast="high"] {
+  --color-bg: #000000;
+  --color-bg-secondary: #0a0a0a;
+  --color-surface: #111111;
+  --color-text: #ffffff;
+  --color-text-secondary: #e0e0e0;
+  --color-text-muted: #cccccc;
+  --color-border: rgba(255, 255, 255, 0.3);
+  --color-nav-bg: rgba(0, 0, 0, 0.95);
+  --color-nav-border: rgba(255, 255, 255, 0.2);
+  --color-card-bg: #111111;
+  --color-accent: #a5b4fc;
+  --color-accent-light: rgba(165, 180, 252, 0.2);
+  --color-shadow: rgba(255, 255, 255, 0.05);
+}
+
+/* Background tint overlays */
+[data-overlay="cream"]  { --color-overlay: rgba(255, 253, 240, 0.5); }
+[data-overlay="blue"]   { --color-overlay: rgba(219, 234, 254, 0.35); }
+[data-overlay="green"]  { --color-overlay: rgba(220, 252, 231, 0.35); }
+[data-overlay="rose"]   { --color-overlay: rgba(255, 228, 230, 0.3); }
+[data-overlay="yellow"] { --color-overlay: rgba(254, 249, 195, 0.35); }
+
+[data-theme="dark"][data-overlay="cream"]  { --color-overlay: rgba(120, 100, 50, 0.08); }
+[data-theme="dark"][data-overlay="blue"]   { --color-overlay: rgba(59, 130, 246, 0.06); }
+[data-theme="dark"][data-overlay="green"]  { --color-overlay: rgba(34, 197, 94, 0.06); }
+[data-theme="dark"][data-overlay="rose"]   { --color-overlay: rgba(244, 63, 94, 0.06); }
+[data-theme="dark"][data-overlay="yellow"] { --color-overlay: rgba(234, 179, 8, 0.06); }
+
 @layer utilities {
   /* Fade in from transparent */
   .animate-fade-in {
@@ -31,12 +132,10 @@
     background-color: #eef2ff !important;
   }
 
-  /* Gradient text */
+  /* Solid accent text (replaces gradient for readability) */
   .text-gradient {
-    background: linear-gradient(135deg, #6366f1, #a855f7);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    color: #4338ca !important;
+    -webkit-text-fill-color: #4338ca;
   }
 
   /* Staggered animation delays */
@@ -105,4 +204,68 @@
 
 .animation-delay-4000 {
   animation-delay: 4s;
+}
+
+/* ── Focus Mode ────────────────────────────────────────── */
+.focus-mode nav[role="navigation"],
+.focus-mode .nav-decorative,
+.focus-mode footer {
+  display: none !important;
+}
+
+.focus-mode main {
+  padding-top: 2rem !important;
+  max-width: 65ch;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* ── Reading Highlight ─────────────────────────────────── */
+.reading-highlight {
+  border-left: 3px solid var(--color-accent, #6366f1);
+  padding-left: 1rem;
+  background: var(--color-accent-light, rgba(99, 102, 241, 0.06));
+  border-radius: 0 0.5rem 0.5rem 0;
+  transition: border-color 0.3s, background 0.3s;
+}
+
+/* ── Theme-aware surface ───────────────────────────────── */
+.theme-bg {
+  background-color: var(--color-bg);
+  color: var(--color-text);
+}
+
+.theme-surface {
+  background-color: var(--color-surface);
+  color: var(--color-text);
+}
+
+.theme-card {
+  background-color: var(--color-card-bg);
+  border-color: var(--color-border);
+  color: var(--color-text);
+}
+
+.theme-nav {
+  background-color: var(--color-nav-bg);
+  border-color: var(--color-nav-border);
+  backdrop-filter: blur(12px);
+}
+
+.theme-text-secondary {
+  color: var(--color-text-secondary);
+}
+
+.theme-text-muted {
+  color: var(--color-text-muted);
+}
+
+/* ── Background overlay tint ───────────────────────────── */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: var(--color-overlay);
+  pointer-events: none;
+  z-index: 9998;
 }

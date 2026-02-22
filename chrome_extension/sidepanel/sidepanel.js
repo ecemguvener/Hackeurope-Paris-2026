@@ -40,12 +40,50 @@
 
   const errorBar = $('errorBar');
 
+  // Theme toggle
+  const themeToggle = $('themeToggle');
+
   // ── Init ───────────────────────────────────────────────────
   buildStyleGrid();
   buildVoiceGrid();
   buildSpeedButtons();
   checkConnection();
   loadPageContext();
+  loadTheme();
+
+  // ── Theme ────────────────────────────────────────────────
+  function loadTheme() {
+    chrome.storage.sync.get('theme', (data) => {
+      const theme = data.theme || '';
+      applyTheme(theme);
+    });
+  }
+
+  function applyTheme(theme) {
+    if (theme === 'dark') {
+      document.documentElement.setAttribute('data-theme', 'dark');
+      themeToggle.textContent = '☀️';
+      themeToggle.title = 'Switch to light mode';
+    } else {
+      document.documentElement.removeAttribute('data-theme');
+      themeToggle.textContent = '🌙';
+      themeToggle.title = 'Switch to dark mode';
+    }
+  }
+
+  themeToggle.addEventListener('click', () => {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    const next = isDark ? '' : 'dark';
+    applyTheme(next);
+    chrome.storage.sync.set({ theme: next });
+  });
+
+  // Check OS preference on load
+  if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+    chrome.storage.sync.get('theme', (data) => {
+      if (!data.theme) applyTheme('dark');
+    });
+  }
 
   // ── Tabs ───────────────────────────────────────────────────
   document.querySelectorAll('.sp-tab').forEach(tab => {

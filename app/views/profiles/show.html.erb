@@ -7,30 +7,32 @@
   <%# Stats summary row %>
   <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8 animate-fade-in-up delay-100">
     <div class="bg-white rounded-2xl shadow-md border border-gray-200 p-6 text-center hover-lift relative overflow-hidden">
-      <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-500 to-indigo-600"></div>
+      <div class="absolute top-0 left-0 right-0 h-1 bg-indigo-600"></div>
       <p class="text-3xl font-bold text-gradient"><%= @documents.count %></p>
       <p class="text-sm text-gray-500 mt-1">Documents</p>
     </div>
     <div class="bg-white rounded-2xl shadow-md border border-gray-200 p-6 text-center hover-lift relative overflow-hidden">
-      <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 to-emerald-600"></div>
+      <div class="absolute top-0 left-0 right-0 h-1 bg-emerald-600"></div>
       <p class="text-3xl font-bold text-gradient"><%= @documents.count(&:version_selected?) %></p>
       <p class="text-sm text-gray-500 mt-1">Selections Made</p>
     </div>
     <div class="bg-white rounded-2xl shadow-md border border-gray-200 p-6 text-center hover-lift relative overflow-hidden">
-      <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-500 to-amber-600"></div>
-      <p class="text-3xl font-bold text-gradient"><%= @user.preferred_style.present? ? @user.preferred_style : "—" %></p>
+      <div class="absolute top-0 left-0 right-0 h-1 bg-amber-600"></div>
+      <% style_title = @user.preferred_style.present? ? (Document.style_for_key(@user.preferred_style)&.dig(:title) || @user.preferred_style.to_s.split("_").first.capitalize) : "—" %>
+      <p class="text-3xl font-bold text-gradient"><%= style_title.split.first %></p>
       <p class="text-sm text-gray-500 mt-1">Preferred Style</p>
     </div>
   </div>
 
   <%# Preferred Style %>
   <div class="bg-white rounded-2xl shadow-md border border-gray-200 p-6 mb-8 animate-fade-in-up delay-200 relative overflow-hidden">
-    <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-500 to-purple-500"></div>
+    <div class="absolute top-0 left-0 right-0 h-1 bg-indigo-600"></div>
     <h2 class="text-lg font-bold text-gray-900 mb-3">Preferred Style</h2>
     <% if @user.preferred_style.present? %>
+      <% preferred_label = Document.style_for_key(@user.preferred_style)&.dig(:title) || @user.preferred_style.to_s.split("_").first.capitalize %>
       <div class="flex items-center gap-3">
         <span class="inline-block bg-indigo-100 text-indigo-700 font-semibold px-4 py-2 rounded-lg text-lg">
-          <%= @user.preferred_style %>
+          <%= preferred_label.split.first %>
         </span>
       </div>
     <% else %>
@@ -47,7 +49,7 @@
                   end %>
 
   <div class="bg-white rounded-2xl shadow-md border border-gray-200 p-6 mb-8 animate-fade-in-up delay-250 relative overflow-hidden">
-    <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 to-cyan-500"></div>
+    <div class="absolute top-0 left-0 right-0 h-1 bg-blue-600"></div>
     <h2 class="text-lg font-bold text-gray-900 mb-2">Auto-Selection Status</h2>
     <% if assessment_done && auto_title.present? %>
       <p class="text-sm text-gray-700">
@@ -64,7 +66,7 @@
   <%# Accessibility Profile %>
   <% if @user.profile.present? && @user.profile.keys.any? %>
     <div class="bg-white rounded-2xl shadow-md border border-gray-200 p-6 mb-8 animate-fade-in-up delay-300 relative overflow-hidden">
-      <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 to-teal-500"></div>
+      <div class="absolute top-0 left-0 right-0 h-1 bg-emerald-600"></div>
       <h2 class="text-lg font-bold text-gray-900 mb-4">Accessibility Profile</h2>
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <% @user.profile.each do |key, value| %>
@@ -80,7 +82,7 @@
 
   <%# Reading Assessment %>
   <div id="reading-assessment" class="bg-white rounded-2xl shadow-md border border-gray-200 p-6 mb-8 animate-fade-in-up delay-350 relative overflow-hidden">
-    <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-fuchsia-500 to-indigo-500"></div>
+    <div class="absolute top-0 left-0 right-0 h-1 bg-indigo-600"></div>
     <h2 class="text-lg font-bold text-gray-900 mb-2">Reading Assessment (Dyslexia Check)</h2>
     <p class="text-sm text-gray-600 mb-4">
       Retype the sentence below and describe what feels difficult. This helps personalize transformations.
@@ -112,14 +114,14 @@
 
       <div class="mt-4">
         <%= f.submit "Save Assessment",
-              class: "inline-block text-white font-semibold py-2 px-5 rounded-lg bg-gradient-to-r from-fuchsia-600 to-indigo-600 hover:from-fuchsia-500 hover:to-indigo-500 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2" %>
+              class: "inline-block text-white font-semibold py-2 px-5 rounded-lg bg-indigo-700 hover:bg-indigo-600 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2" %>
       </div>
     <% end %>
   </div>
 
   <%# Document History %>
   <div class="bg-white rounded-2xl shadow-md border border-gray-200 p-6 animate-fade-in-up delay-400 relative overflow-hidden">
-    <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-500 to-orange-500"></div>
+    <div class="absolute top-0 left-0 right-0 h-1 bg-amber-600"></div>
     <h2 class="text-lg font-bold text-gray-900 mb-4">Document History</h2>
     <% if @documents.any? %>
       <div class="divide-y divide-gray-100">
@@ -155,7 +157,7 @@
       <div class="text-center py-8">
         <p class="text-gray-500 mb-4">No documents yet — upload your first one!</p>
         <%= link_to "Upload a Document", upload_path,
-              class: "inline-block text-white font-semibold py-2 px-6 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 shadow-lg transition-all" %>
+              class: "inline-block text-white font-semibold py-2 px-6 rounded-xl bg-indigo-700 hover:bg-indigo-600 shadow-lg transition-all" %>
       </div>
     <% end %>
   </div>

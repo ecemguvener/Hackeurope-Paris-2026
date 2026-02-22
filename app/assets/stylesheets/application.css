@@ -47,7 +47,7 @@
 }
 
 .dys-font-open {
-  font-family: "OpenDyslexic", "Atkinson Hyperlegible", "Verdana", sans-serif;
+  font-family: "Open Dyslexic", "OpenDyslexic", "Atkinson Hyperlegible", "Verdana", sans-serif;
 }
 
 .dys-keyword {
@@ -69,3 +69,62 @@
   letter-spacing: 0.016em;
   word-spacing: 0.1em;
 }
+
+/* ── Dark mode overrides for dys-* classes ─────────────── */
+[data-theme="dark"] .dys-keyword {
+  color: #fde68a;
+  background: linear-gradient(transparent 60%, rgba(120, 80, 0, 0.3) 0);
+}
+
+[data-theme="dark"] .dyslexia-surface {
+  border-color: #4a3728;
+  box-shadow: inset 0 0 0 1px rgba(180, 83, 9, 0.1);
+}
+
+[data-theme="dark"] .dyslexia-content {
+  color: var(--color-text, #e2e8f0);
+}
+
+/* ── Dark-mode flash messages ──────────────────────────── */
+[data-theme="dark"] [role="status"] {
+  background: rgba(34, 197, 94, 0.1);
+  border-color: rgba(34, 197, 94, 0.3);
+  color: #86efac;
+}
+
+[data-theme="dark"] [role="alert"] {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.3);
+  color: #fca5a5;
+}
+
+/* ── Dark mode form elements ───────────────────────────── */
+[data-theme="dark"] input,
+[data-theme="dark"] textarea,
+[data-theme="dark"] select {
+  background-color: var(--color-surface, #1e2746);
+  color: var(--color-text, #e2e8f0);
+  border-color: var(--color-border, rgba(74, 85, 104, 0.5));
+}
+
+/* ── Dark mode catch-all text color ────────────────────── */
+[data-theme="dark"] {
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .border-gray-200,
+[data-theme="dark"] .border-gray-100 {
+  border-color: var(--color-border, rgba(74, 85, 104, 0.5)) !important;
+}
+
+[data-theme="dark"] .bg-gray-50,
+[data-theme="dark"] .bg-gray-100 {
+  background-color: rgba(30, 39, 70, 0.5) !important;
+}
+
+[data-theme="dark"] .shadow-md,
+[data-theme="dark"] .shadow-lg {
+  --tw-shadow-color: rgba(0, 0, 0, 0.3);
+}
+
+/* ── Text overrides moved to tailwind/application.css (loads after Tailwind) ── */

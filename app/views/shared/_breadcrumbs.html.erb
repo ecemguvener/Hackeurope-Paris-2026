@@ -1,0 +1,40 @@
+<%# Step indicator: Upload (1) → Results (2) → Your Version (3)
+     Pass `current_step:` 1, 2, or 3 when rendering. %>
+<% current_step ||= 1 %>
+<% steps = [
+  { number: 1, label: "Upload" },
+  { number: 2, label: "Results" },
+  { number: 3, label: "Your Version" }
+] %>
+
+<nav aria-label="Progress" class="mb-6">
+  <ol class="flex items-center justify-center gap-4 text-base flex-wrap">
+    <% steps.each_with_index do |step, i| %>
+      <% if i > 0 %>
+        <li class="flex items-center" aria-hidden="true">
+          <span class="text-gray-900 font-bold text-lg mx-1">→</span>
+        </li>
+      <% end %>
+      <li class="flex items-center">
+        <% if step[:number] < current_step %>
+          <span class="flex items-center gap-2 font-bold text-gray-900">
+            <svg class="w-6 h-6 text-green-600" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+            </svg>
+            <%= step[:label] %>
+          </span>
+        <% elsif step[:number] == current_step %>
+          <span class="flex items-center gap-2 font-bold text-gray-900">
+            <span class="w-7 h-7 flex items-center justify-center rounded-full bg-indigo-600 text-white text-sm font-bold"><%= step[:number] %></span>
+            <%= step[:label] %>
+          </span>
+        <% else %>
+          <span class="flex items-center gap-2 font-bold text-gray-900">
+            <span class="w-7 h-7 flex items-center justify-center rounded-full border-2 border-gray-900 text-sm font-bold"><%= step[:number] %></span>
+            <%= step[:label] %>
+          </span>
+        <% end %>
+      </li>
+    <% end %>
+  </ol>
+</nav>

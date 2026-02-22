@@ -33,19 +33,19 @@
   <%# Plan status + credits row %>
   <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8 animate-fade-in-up delay-100">
     <div class="bg-white rounded-2xl shadow-md border border-gray-200 p-6 text-center hover-lift relative overflow-hidden">
-      <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-500 to-purple-500"></div>
+      <div class="absolute top-0 left-0 right-0 h-1 bg-indigo-600"></div>
       <p class="text-sm text-gray-500 mb-1">Plan</p>
       <p class="text-xl font-bold text-gradient"><%= @summary[:plan] %></p>
     </div>
     <div class="bg-white rounded-2xl shadow-md border border-gray-200 p-6 text-center hover-lift relative overflow-hidden">
-      <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 to-emerald-600"></div>
+      <div class="absolute top-0 left-0 right-0 h-1 bg-emerald-600"></div>
       <p class="text-sm text-gray-500 mb-1">Credits Remaining</p>
       <p class="text-xl font-bold text-gradient">
         <%= @summary[:remaining].present? ? number_with_delimiter(@summary[:remaining]) : "Unlimited" %>
       </p>
     </div>
     <div class="bg-white rounded-2xl shadow-md border border-gray-200 p-6 text-center hover-lift relative overflow-hidden">
-      <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-500 to-orange-500"></div>
+      <div class="absolute top-0 left-0 right-0 h-1 bg-amber-600"></div>
       <p class="text-sm text-gray-500 mb-1">Documents Processed</p>
       <p class="text-xl font-bold text-gradient"><%= @documents.count %></p>
     </div>
@@ -54,7 +54,7 @@
   <%# Credit usage progress bar %>
   <% unless @stub_mode %>
     <div class="bg-white rounded-2xl shadow-md border border-gray-200 p-6 mb-8 animate-fade-in-up delay-200 relative overflow-hidden">
-      <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-500 to-purple-500"></div>
+      <div class="absolute top-0 left-0 right-0 h-1 bg-indigo-600"></div>
       <h2 class="text-lg font-bold text-gray-900 mb-4">Credit Usage</h2>
       <% if @summary[:bundles].present? %>
         <% @summary[:bundles].each do |bundle| %>
@@ -62,7 +62,7 @@
             granted = bundle.dig("granted_amount") || bundle.dig("total") || 0
             used = bundle.dig("used_amount") || bundle.dig("used") || 0
             pct = granted > 0 ? [ (used.to_f / granted * 100).round, 100 ].min : 0
-            bar_color = pct > 90 ? "from-red-500 to-red-600" : pct > 70 ? "from-amber-500 to-amber-600" : "from-emerald-500 to-emerald-600"
+            bar_color = pct > 90 ? "bg-red-600" : pct > 70 ? "bg-amber-600" : "bg-emerald-600"
           %>
           <div class="mb-4 last:mb-0">
             <div class="flex justify-between text-sm mb-1">
@@ -70,7 +70,7 @@
               <span class="text-gray-500"><%= number_with_delimiter(used) %> / <%= number_with_delimiter(granted) %></span>
             </div>
             <div class="w-full bg-gray-100 rounded-full h-3 overflow-hidden">
-              <div class="h-3 rounded-full bg-gradient-to-r <%= bar_color %> transition-all duration-500" style="width: <%= pct %>%"></div>
+              <div class="h-3 rounded-full <%= bar_color %> transition-all duration-500" style="width: <%= pct %>%"></div>
             </div>
           </div>
         <% end %>
@@ -83,7 +83,7 @@
   <%# Entitlements / features table %>
   <% if !@stub_mode && @summary[:customer].present? %>
     <div class="bg-white rounded-2xl shadow-md border border-gray-200 p-6 mb-8 animate-fade-in-up delay-300 relative overflow-hidden">
-      <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 to-teal-500"></div>
+      <div class="absolute top-0 left-0 right-0 h-1 bg-emerald-600"></div>
       <h2 class="text-lg font-bold text-gray-900 mb-4">Entitlements</h2>
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div class="flex items-center justify-between bg-gray-50 rounded-lg px-4 py-3">
@@ -108,7 +108,7 @@
 
   <%# Recent documents %>
   <div class="bg-white rounded-2xl shadow-md border border-gray-200 p-6 animate-fade-in-up delay-400 relative overflow-hidden">
-    <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-500 to-orange-500"></div>
+    <div class="absolute top-0 left-0 right-0 h-1 bg-amber-600"></div>
     <h2 class="text-lg font-bold text-gray-900 mb-4">Recent Documents</h2>
     <% if @documents.any? %>
       <div class="divide-y divide-gray-100">
@@ -140,7 +140,7 @@
       <div class="text-center py-8">
         <p class="text-gray-500 mb-4">No documents yet.</p>
         <%= link_to "Upload a Document", upload_path,
-              class: "inline-block text-white font-semibold py-2 px-6 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 shadow-lg transition-all" %>
+              class: "inline-block text-white font-semibold py-2 px-6 rounded-xl bg-indigo-700 hover:bg-indigo-600 shadow-lg transition-all" %>
       </div>
     <% end %>
   </div>

@@ -9,7 +9,26 @@
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
 
+    <%# FOUC prevention: apply theme on <html> before first paint (body classes handled by Stimulus) %>
+    <script>
+      (function() {
+        try {
+          var h = document.documentElement;
+          var t = localStorage.getItem('qlarity-theme');
+          var c = localStorage.getItem('qlarity-contrast');
+          var o = localStorage.getItem('qlarity-overlay');
+          if (t) h.setAttribute('data-theme', t);
+          if (c) h.setAttribute('data-contrast', c);
+          if (o) h.setAttribute('data-overlay', o);
+        } catch(e) {}
+      })();
+    </script>
+
     <%= yield :head %>
+
+    <%# Load OpenDyslexic font %>
+    <link rel="preconnect" href="https://fonts.cdnfonts.com">
+    <link rel="stylesheet" href="https://fonts.cdnfonts.com/css/open-dyslexic">
 
     <link rel="icon" href="/icon.png" type="image/png">
     <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -20,14 +39,16 @@
     <%= javascript_importmap_tags %>
   </head>
 
-  <body class="bg-gradient-to-br from-slate-50 via-white to-indigo-50/30 min-h-screen">
+  <body class="min-h-screen" style="background-color: var(--color-bg, #f8f7f4); color: var(--color-text, #1e1b4b);"
+        data-controller="accessibility">
     <%# Skip to main content for keyboard/screen-reader users (WCAG 2.4.1) %>
     <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[60] focus:bg-white focus:px-4 focus:py-2 focus:rounded-lg focus:shadow-lg focus:text-indigo-600 focus:font-semibold">
       Skip to main content
     </a>
 
     <%# Navigation bar %>
-    <nav class="bg-white/80 backdrop-blur-md shadow-sm border-b border-gray-200/50 fixed top-0 left-0 right-0 z-50" role="navigation" aria-label="Main navigation">
+    <nav class="shadow-sm border-b fixed top-0 left-0 right-0 z-50" role="navigation" aria-label="Main navigation"
+         style="background-color: var(--color-nav-bg); border-color: var(--color-nav-border); backdrop-filter: blur(12px);">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex items-center justify-between h-16">
           <%# Logo %>
@@ -45,17 +66,28 @@
             <span class="text-2xl font-bold text-gradient group-hover:opacity-80 transition-opacity">Qlarity</span>
           <% end %>
 
-          <%# Nav links %>
+          <%# Nav links + Accessibility toolbar trigger %>
           <div class="flex items-center gap-1">
             <%= link_to "Upload", upload_path,
-                  class: "px-4 py-2 text-sm font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 #{request.path == '/upload' ? 'text-indigo-600 bg-indigo-50' : 'text-gray-700 hover:text-indigo-600 hover:bg-gray-50'}" %>
+                  class: "px-4 py-2 text-sm font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 #{request.path == '/upload' ? 'text-indigo-600 bg-indigo-50' : 'text-gray-900 hover:text-indigo-600 hover:bg-gray-50'}" %>
             <%= link_to "Profile", profile_path,
-                  class: "px-4 py-2 text-sm font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 #{request.path == '/profile' ? 'text-indigo-600 bg-indigo-50' : 'text-gray-700 hover:text-indigo-600 hover:bg-gray-50'}" %>
+                  class: "px-4 py-2 text-sm font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 #{request.path == '/profile' ? 'text-indigo-600 bg-indigo-50' : 'text-gray-900 hover:text-indigo-600 hover:bg-gray-50'}" %>
             <%= link_to "Billing", billing_path,
-                  class: "px-4 py-2 text-sm font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 #{request.path == '/billing' ? 'text-indigo-600 bg-indigo-50' : 'text-gray-700 hover:text-indigo-600 hover:bg-gray-50'}" %>
+                  class: "px-4 py-2 text-sm font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 #{request.path == '/billing' ? 'text-indigo-600 bg-indigo-50' : 'text-gray-900 hover:text-indigo-600 hover:bg-gray-50'}" %>
+
+            <%# Accessibility toolbar trigger %>
+            <button data-action="accessibility#togglePanel"
+                    class="ml-2 px-3 py-2 text-sm font-bold rounded-lg border-2 border-indigo-300 text-indigo-600 hover:bg-indigo-50 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                    aria-label="Accessibility settings"
+                    title="Accessibility settings">
+              Aa
+            </button>
           </div>
         </div>
       </div>
+
+      <%# Accessibility toolbar panel %>
+      <%= render "shared/accessibility_toolbar" %>
     </nav>
 
     <%# Flash messages %>

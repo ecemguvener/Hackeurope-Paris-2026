@@ -6,16 +6,26 @@
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-family: 'Atkinson Hyperlegible', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       background: #f5f3ff;
       color: #1e1b4b;
       padding: 40px;
       min-width: 500px;
+      font-size: 15px;
+      line-height: 1.6;
     }
     h1 {
       font-size: 24px;
       margin-bottom: 8px;
       color: #6d28d9;
+    }
+    h2 {
+      font-size: 18px;
+      margin-top: 32px;
+      margin-bottom: 12px;
+      color: #6d28d9;
+      padding-top: 20px;
+      border-top: 1px solid #e5e7eb;
     }
     .subtitle {
       color: #6b7280;
@@ -30,7 +40,8 @@
       margin-bottom: 6px;
       font-size: 14px;
     }
-    input {
+    input[type="url"],
+    input[type="text"] {
       width: 100%;
       padding: 10px 14px;
       border: 2px solid #e5e7eb;
@@ -70,6 +81,58 @@
     }
     .status.success { display: block; background: #ecfdf5; color: #065f46; }
     .status.error { display: block; background: #fef2f2; color: #991b1b; }
+
+    /* Tint selector */
+    .tint-options {
+      display: flex;
+      gap: 12px;
+      margin-top: 8px;
+    }
+    .tint-swatch {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 3px solid #e5e7eb;
+      cursor: pointer;
+      transition: border-color 0.2s, transform 0.1s;
+      position: relative;
+    }
+    .tint-swatch:hover {
+      transform: scale(1.1);
+      border-color: #c4b5fd;
+    }
+    .tint-swatch.selected {
+      border-color: #7c3aed;
+      box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.3);
+    }
+    .tint-swatch::after {
+      content: attr(data-label);
+      position: absolute;
+      top: 46px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 11px;
+      color: #6b7280;
+      white-space: nowrap;
+    }
+
+    /* Checkbox */
+    .checkbox-field {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 16px;
+    }
+    .checkbox-field input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      accent-color: #7c3aed;
+    }
+    .checkbox-field label {
+      margin-bottom: 0;
+      font-weight: 500;
+      font-size: 14px;
+    }
   </style>
 </head>
 <body>
@@ -90,6 +153,25 @@
 
   <button id="saveBtn">Save Settings</button>
   <div id="status" class="status"></div>
+
+  <h2>Reading Overlay</h2>
+  <p class="hint" style="margin-bottom: 12px;">Apply a tinted overlay on web pages to reduce visual stress while reading.</p>
+
+  <div class="field">
+    <label>Overlay Tint</label>
+    <div class="tint-options">
+      <div class="tint-swatch selected" data-tint="none" data-label="None" style="background: #ffffff;"></div>
+      <div class="tint-swatch" data-tint="cream" data-label="Cream" style="background: #fffdf0;"></div>
+      <div class="tint-swatch" data-tint="blue" data-label="Blue" style="background: #dbeafe;"></div>
+      <div class="tint-swatch" data-tint="green" data-label="Green" style="background: #dcfce7;"></div>
+      <div class="tint-swatch" data-tint="rose" data-label="Rose" style="background: #ffe4e6;"></div>
+    </div>
+  </div>
+
+  <div class="checkbox-field">
+    <input type="checkbox" id="overlayAuto">
+    <label for="overlayAuto">Auto-apply overlay on all pages</label>
+  </div>
 
   <script src="../lib/constants.js"></script>
   <script src="../lib/auth.js"></script>
