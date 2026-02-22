@@ -8,12 +8,16 @@ class DocumentsController < ApplicationController
   ].freeze
 
   MAX_FILE_SIZE = 5.megabytes
+  before_action :ensure_assessment_completed!, only: %i[create]
 
   def new
     @document = Document.new
+    @assessment_completed = assessment_completed?
   end
 
   def create
+    @assessment_completed = true
+
     unless params.dig(:document, :file).present?
       @document = Document.new
       flash.now[:alert] = "Please select a file to upload"
@@ -70,7 +74,12 @@ class DocumentsController < ApplicationController
       }
       @document.update!(transformations: transformations)
 
-      redirect_to results_path(@document)
+      # Hackathon UX: auto-pick the best style so users land directly on one clean result.
+      auto_style = normalize_style_key(result[:recommended_style]) || "bullet_points"
+      CollapseRunner.call(@document, auto_style, { auto_selected: true })
+
+      redirect_to collapsed_show_path(@document),
+        notice: "We auto-picked #{Document.style_for_key(auto_style)&.dig(:title) || auto_style.humanize} for you based on your reading profile."
     else
       flash.now[:alert] = "Something went wrong. Please try again."
       render :new, status: :unprocessable_entity
@@ -174,5 +183,37 @@ class DocumentsController < ApplicationController
       dwell_ms: params[:dwell_ms],
       tts_style: params[:tts_style]
     }.compact
+  end
+
+  def ensure_assessment_completed!
+    return if assessment_completed?
+
+    redirect_to upload_path, alert: "Please finish the quick reading assessment first so we can auto-pick your best format."
+  end
+
+  def assessment_completed?
+    profile = current_user.profile || {}
+    profile["assessment_completed"] == true ||
+      profile["assessment_completed_at"].present? ||
+      profile["recommended_style"].present? ||
+      profile["assessment"].present?
+  end
+
+  def normalize_style_key(raw_style)
+    key = raw_style.to_s
+    return key if Document.style_keys.include?(key)
+
+    case key
+    when "bullet"
+      "bullet_points"
+    when "simple"
+      "simplified"
+    when "chunked", "structured"
+      "restructured"
+    when "plain"
+      "plain_language"
+    else
+      nil
+    end
   end
 end

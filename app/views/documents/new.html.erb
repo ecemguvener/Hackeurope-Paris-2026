@@ -1,7 +1,13 @@
 <div class="min-h-[80vh] flex items-center justify-center px-4">
   <div class="w-full max-w-lg animate-fade-in">
     <h1 class="text-4xl font-bold text-gray-900 mb-2 text-center">Upload Content</h1>
-    <p class="text-gray-600 mb-8 text-center">Upload an image, PDF, or text file to transform.</p>
+    <p class="text-gray-600 mb-8 text-center">
+      <% if @assessment_completed %>
+        Upload an image, PDF, or text file to transform.
+      <% else %>
+        Quick first step: complete reading assessment, then upload.
+      <% end %>
+    </p>
 
     <% if flash[:alert] %>
       <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6" role="alert">
@@ -9,7 +15,36 @@
       </div>
     <% end %>
 
-    <%= form_with url: upload_path, method: :post, multipart: true, class: "space-y-6",
+    <% unless @assessment_completed %>
+      <div class="bg-white rounded-2xl shadow-md border border-gray-200 p-6 mb-6 relative overflow-hidden">
+        <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-fuchsia-500 to-indigo-500"></div>
+        <h2 class="text-lg font-bold text-gray-900 mb-2">Step 1: Reading Assessment</h2>
+        <p class="text-sm text-gray-600 mb-4">We use this once to auto-pick the best format for your uploads.</p>
+
+        <div class="rounded-lg border border-fuchsia-200 bg-fuchsia-50 p-4 mb-4">
+          <p class="text-sm text-fuchsia-700 font-medium">Sentence to retype:</p>
+          <p class="text-base text-gray-900 mt-1"><%= ReadingTestAnalyser::TEST_SENTENCE %></p>
+        </div>
+
+        <%= form_with url: profile_assessment_path, method: :post, data: { controller: "reading-test", action: "submit->reading-test#stamp" } do |f| %>
+          <%= hidden_field_tag :return_to, upload_path %>
+          <div class="space-y-3">
+            <%= f.text_area :retyped_text, rows: 2, required: true, placeholder: "Retype the sentence here...",
+                  data: { action: "input->reading-test#track", reading_test_target: "retyped" },
+                  class: "w-full rounded-lg border border-gray-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" %>
+            <%= f.text_area :self_described_difficulty, rows: 2, required: true, placeholder: "What felt difficult?",
+                  class: "w-full rounded-lg border border-gray-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" %>
+          </div>
+
+          <%= f.hidden_field :time_taken_seconds, value: 1, data: { reading_test_target: "time" } %>
+          <%= f.hidden_field :typing_metrics_json, value: "{}", data: { reading_test_target: "metrics" } %>
+          <%= f.submit "Save & Continue",
+                class: "mt-3 inline-block text-white font-semibold py-2 px-5 rounded-lg bg-gradient-to-r from-fuchsia-600 to-indigo-600 hover:from-fuchsia-500 hover:to-indigo-500 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2" %>
+        <% end %>
+      </div>
+    <% end %>
+
+    <%= form_with url: upload_path, method: :post, multipart: true, class: "space-y-6 #{'opacity-60 pointer-events-none' unless @assessment_completed}",
           data: { controller: "dropzone" } do |f| %>
       <div class="border-2 border-dashed border-gray-300 rounded-xl p-10 text-center hover:border-indigo-400 transition-colors"
            data-dropzone-target="zone"
@@ -31,12 +66,19 @@
           class="sr-only"
           data-dropzone-target="input"
           onchange="document.getElementById('file-name').textContent = this.files[0]?.name || ''"
+          <%= "disabled" unless @assessment_completed %>
         >
         <p class="text-sm text-gray-400 mt-2">.txt, .pdf, .png, .jpg up to 10MB</p>
         <p id="file-name" class="text-sm text-indigo-600 font-medium mt-2" data-dropzone-target="filename"></p>
       </div>
 
-      <button type="submit" class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white py-3 px-6 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl hover:shadow-indigo-500/25 transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+      <% unless @assessment_completed %>
+        <p class="text-sm text-gray-600 text-center">Complete Step 1 to unlock upload.</p>
+      <% end %>
+
+      <button type="submit"
+              <%= "disabled" unless @assessment_completed %>
+              class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white py-3 px-6 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl hover:shadow-indigo-500/25 transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed">
         Transform My Content
       </button>
     <% end %>

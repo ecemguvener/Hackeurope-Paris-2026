@@ -1,7 +1,13 @@
 require "rails_helper"
 
 RSpec.describe "Documents", type: :request do
-  let!(:user) { User.create!(name: "Demo User", profile: {}, superposition_states: {}) }
+  let!(:user) do
+    User.create!(
+      name: "Demo User",
+      profile: { "assessment_completed" => true, "recommended_style" => "bullet_points" },
+      superposition_states: {}
+    )
+  end
 
   describe "GET /upload" do
     it "renders the upload form" do
@@ -10,13 +16,36 @@ RSpec.describe "Documents", type: :request do
       expect(response.body).to include("Transform My Content")
       expect(response.body).to include('accept=".txt,.pdf,.png,.jpg,.jpeg"')
     end
+
+    it "shows assessment-first state when assessment is not completed" do
+      user.update!(profile: {})
+
+      get upload_path
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Step 1: Reading Assessment")
+      expect(response.body).to include("Complete Step 1 to unlock upload.")
+    end
   end
 
   describe "POST /upload" do
+    context "when assessment is missing" do
+      let(:file) { fixture_file_upload("test.txt", "text/plain") }
+
+      it "does not create a document and redirects back to upload" do
+        user.update!(profile: {})
+
+        expect {
+          post upload_path, params: { document: { file: file } }
+        }.not_to change(Document, :count)
+
+        expect(response).to redirect_to(upload_path)
+      end
+    end
+
     context "with a valid text file" do
       let(:file) { fixture_file_upload("test.txt", "text/plain") }
 
-      it "creates a document and redirects to results" do
+      it "creates a document and redirects to auto-selected collapsed view" do
         expect {
           post upload_path, params: { document: { file: file } }
         }.to change(Document, :count).by(1)
@@ -26,35 +55,38 @@ RSpec.describe "Documents", type: :request do
         expect(document.extracted_text).to include("sample text")
         expect(document.content_hash).to be_present
         expect(document.user).to eq(user)
-        expect(response).to redirect_to(results_path(document))
+        expect(document.selected_version).to be_present
+        expect(response).to redirect_to(collapsed_show_path(document))
       end
     end
 
     context "with a valid PDF file" do
       let(:file) { fixture_file_upload("test.pdf", "application/pdf") }
 
-      it "creates a document and redirects to results" do
+      it "creates a document and redirects to auto-selected collapsed view" do
         expect {
           post upload_path, params: { document: { file: file } }
         }.to change(Document, :count).by(1)
 
         document = Document.last
         expect(document.file).to be_attached
-        expect(response).to redirect_to(results_path(document))
+        expect(document.selected_version).to be_present
+        expect(response).to redirect_to(collapsed_show_path(document))
       end
     end
 
     context "with a valid image file" do
       let(:file) { fixture_file_upload("test.png", "image/png") }
 
-      it "creates a document and redirects to results" do
+      it "creates a document and redirects to auto-selected collapsed view" do
         expect {
           post upload_path, params: { document: { file: file } }
         }.to change(Document, :count).by(1)
 
         document = Document.last
         expect(document.file).to be_attached
-        expect(response).to redirect_to(results_path(document))
+        expect(document.selected_version).to be_present
+        expect(response).to redirect_to(collapsed_show_path(document))
       end
     end
 

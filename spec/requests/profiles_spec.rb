@@ -96,6 +96,8 @@ RSpec.describe "Profiles", type: :request do
       expect(response).to redirect_to(profile_path)
       expect(user.profile).to be_present
       expect(user.preferred_style).to be_present
+      expect(user.profile["assessment_completed"]).to eq(true)
+      expect(user.profile["recommended_style"]).to be_present
     end
   end
 
