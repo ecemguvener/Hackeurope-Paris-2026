@@ -22,7 +22,7 @@
     </div>
 
     <div class="px-6 py-5">
-      <div data-toggle-target="transformed" class="prose max-w-none text-gray-800 dyslexia-content dyslexia-surface <%= dyslexia_background_class(current_user) %> p-5">
+      <div data-toggle-target="transformed" class="prose max-w-none text-gray-800 <%= dyslexia_reading_classes(current_user) %> p-5">
         <%= dyslexia_reading_html(@document.selected_content || "Transformation content will appear here.") %>
       </div>
       <div data-toggle-target="original" class="hidden prose max-w-none bg-amber-50 rounded-lg p-4 text-gray-700">

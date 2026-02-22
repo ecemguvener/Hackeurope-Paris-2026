@@ -39,7 +39,7 @@
 
           <%# Card content %>
           <div class="px-5 py-4 flex-1">
-            <div data-toggle-target="transformed" class="prose prose-sm max-w-none text-gray-800 dyslexia-content dyslexia-surface <%= dyslexia_background_class(current_user) %> p-4">
+            <div data-toggle-target="transformed" class="prose prose-sm max-w-none text-gray-800 <%= dyslexia_reading_classes(current_user) %> p-4">
               <%= dyslexia_reading_html(version[:content] || "Awaiting transformation...") %>
             </div>
             <div data-toggle-target="original" class="hidden prose prose-sm max-w-none bg-amber-50 rounded-lg p-3 text-gray-700">
