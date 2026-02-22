@@ -15,23 +15,34 @@
     <link rel="icon" href="/icon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="/icon.png">
 
+    <%# Atkinson Hyperlegible — designed for low-vision readers, excellent for dyslexia %>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+    <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
+
     <%# Includes all stylesheet files in app/assets/stylesheets %>
     <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
     <%= javascript_importmap_tags %>
   </head>
 
-  <body class="bg-gradient-to-br from-slate-50 via-white to-indigo-50/30 min-h-screen">
-    <%# Skip to main content for keyboard/screen-reader users (WCAG 2.4.1) %>
-    <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[60] focus:bg-white focus:px-4 focus:py-2 focus:rounded-lg focus:shadow-lg focus:text-indigo-600 focus:font-semibold">
+  <body class="bg-stone-50 min-h-screen text-stone-800">
+    <%# Skip to main content (WCAG 2.4.1 — keyboard + screen-reader) %>
+    <a href="#main-content"
+       class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[60] focus:bg-white focus:px-4 focus:py-2 focus:rounded-lg focus:shadow-lg focus:text-indigo-600 focus:font-semibold focus:ring-2 focus:ring-indigo-500">
       Skip to main content
     </a>
 
     <%# Navigation bar %>
-    <nav class="bg-white/80 backdrop-blur-md shadow-sm border-b border-gray-200/50 fixed top-0 left-0 right-0 z-50" role="navigation" aria-label="Main navigation">
+    <nav class="bg-white/90 backdrop-blur-md shadow-sm border-b border-stone-200 fixed top-0 left-0 right-0 z-50"
+         role="navigation"
+         aria-label="Main navigation">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex items-center justify-between h-16">
+
           <%# Logo %>
-          <%= link_to root_path, class: "flex items-center gap-2 group", "aria-label": "Qlarity home" do %>
+          <%= link_to root_path,
+                class: "flex items-center gap-2 group flex-shrink-0",
+                "aria-label": "Qlarity — go to home" do %>
             <svg width="32" height="32" viewBox="0 0 512 512" class="flex-shrink-0" aria-hidden="true">
               <defs>
                 <linearGradient id="nav-logo-bg" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -42,17 +53,34 @@
               <rect width="512" height="512" rx="96" fill="url(#nav-logo-bg)"/>
               <text x="256" y="340" text-anchor="middle" font-family="system-ui, sans-serif" font-size="320" font-weight="bold" fill="white">Q</text>
             </svg>
-            <span class="text-2xl font-bold text-gradient group-hover:opacity-80 transition-opacity">Qlarity</span>
+            <span class="text-xl font-bold text-gradient group-hover:opacity-80 transition-opacity">Qlarity</span>
           <% end %>
 
-          <%# Nav links %>
-          <div class="flex items-center gap-1">
+          <%# Nav links + reading mode toggle %>
+          <div class="flex items-center gap-1 sm:gap-2">
             <%= link_to "Upload", upload_path,
-                  class: "px-4 py-2 text-sm font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 #{request.path == '/upload' ? 'text-indigo-600 bg-indigo-50' : 'text-gray-700 hover:text-indigo-600 hover:bg-gray-50'}" %>
+                  class: "px-3 py-2 text-sm font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 #{request.path == '/upload' ? 'text-indigo-600 bg-indigo-50' : 'text-stone-600 hover:text-indigo-600 hover:bg-stone-100'}" %>
             <%= link_to "Profile", profile_path,
-                  class: "px-4 py-2 text-sm font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 #{request.path == '/profile' ? 'text-indigo-600 bg-indigo-50' : 'text-gray-700 hover:text-indigo-600 hover:bg-gray-50'}" %>
+                  class: "px-3 py-2 text-sm font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 #{request.path == '/profile' ? 'text-indigo-600 bg-indigo-50' : 'text-stone-600 hover:text-indigo-600 hover:bg-stone-100'}" %>
             <%= link_to "Billing", billing_path,
-                  class: "px-4 py-2 text-sm font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 #{request.path == '/billing' ? 'text-indigo-600 bg-indigo-50' : 'text-gray-700 hover:text-indigo-600 hover:bg-gray-50'}" %>
+                  class: "hidden sm:block px-3 py-2 text-sm font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 #{request.path == '/billing' ? 'text-indigo-600 bg-indigo-50' : 'text-stone-600 hover:text-indigo-600 hover:bg-stone-100'}" %>
+
+            <%# Separator %>
+            <div class="hidden sm:block w-px h-5 bg-stone-200 mx-1" aria-hidden="true"></div>
+
+            <%# Reading Mode toggle %>
+            <button data-controller="reading-mode"
+                    data-action="click->reading-mode#toggle"
+                    aria-pressed="false"
+                    class="reading-mode-btn"
+                    title="Toggle reading mode for easier reading">
+              <%# Book icon %>
+              <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+              </svg>
+              <span class="hidden sm:inline" data-reading-mode-target="label">Reading Mode</span>
+            </button>
           </div>
         </div>
       </div>
@@ -60,21 +88,21 @@
 
     <%# Flash messages %>
     <% if flash[:notice] || flash[:alert] %>
-      <div class="max-w-4xl mx-auto pt-20 px-4 space-y-2">
+      <div class="max-w-4xl mx-auto pt-20 px-4 space-y-2" aria-live="polite">
         <% if flash[:notice] %>
-          <div class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg" role="status">
+          <div class="bg-emerald-50 border border-emerald-200 text-emerald-800 px-4 py-3 rounded-xl text-sm font-medium" role="status">
             <%= flash[:notice] %>
           </div>
         <% end %>
         <% if flash[:alert] %>
-          <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg" role="alert">
+          <div class="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-xl text-sm font-medium" role="alert">
             <%= flash[:alert] %>
           </div>
         <% end %>
       </div>
     <% end %>
 
-    <main id="main-content" class="pt-20 pb-10">
+    <main id="main-content" class="pt-20 pb-12">
       <%= yield %>
     </main>
   </body>

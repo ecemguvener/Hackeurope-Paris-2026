@@ -218,6 +218,52 @@ bin/extract invoice.pdf --speak --voice=rachel
 
 ---
 
+## Accessibility
+
+Qlarity is designed for dyslexic users. The following checklist summarises the implemented a11y features.
+
+### Keyboard navigation
+- [ ] Skip-to-content link appears on first <kbd>Tab</kbd> press (bypasses nav — WCAG 2.4.1)
+- [ ] All interactive elements reachable and usable with keyboard only
+- [ ] Tab panels support ← → arrow-key navigation (ARIA APG tab pattern)
+- [ ] All buttons/links have `:focus-visible` outlines (2px indigo, WCAG 2.4.7)
+- [ ] Forms operable without a mouse; submit triggered by <kbd>Enter</kbd>
+
+### Screen readers
+- [ ] `<html lang="en">` set on every page
+- [ ] Landmark roles present: `<nav>`, `<main id="main-content">`, `<aside>`
+- [ ] Heading hierarchy is sequential (h1 → h2 → h3) — no skipped levels
+- [ ] Icon-only SVGs have `aria-hidden="true"`; buttons have `aria-label` text
+- [ ] Flash messages use `role="alert"` (errors) / `role="status"` (notices) with `aria-live`
+- [ ] File-name display after selection uses `aria-live="polite"`
+- [ ] Audio player uses `<audio controls>` with `aria-label`
+- [ ] Tab buttons use `role="tab"`, `aria-selected`, `aria-controls` per ARIA spec
+- [ ] Step indicators use `aria-current="step"` on active step
+- [ ] Loading cards include `aria-busy="true"` and `role="status"` spinner
+
+### Colour & contrast
+- [ ] Body text `text-stone-800` on `bg-stone-50` — ratio ≥ 7:1 (AAA)
+- [ ] Pure black/white avoided; warm neutrals used throughout
+- [ ] Error messages: `text-red-800` on `bg-red-50` — sufficient contrast
+- [ ] Indigo primary colour (#6366f1) on white — ratio ≥ 4.5:1 (AA)
+- [ ] Interactive states (hover, focus, active) are visually distinct
+
+### Dyslexia-friendly typography
+- [ ] Base font: *Atkinson Hyperlegible* (Google Fonts) with Verdana/Tahoma/Arial fallbacks
+- [ ] Reading content: `line-height: 1.75–2`, `letter-spacing: 0.008–0.016em`, `word-spacing: 0.04–0.1em`
+- [ ] **Reading Mode toggle** in the nav increases font size to 1.3rem, `line-height: 2.2`, extra word/letter spacing; persisted in `localStorage`
+- [ ] **Strong accessibility mode** boosts spacing further + highlights repeated keywords
+- [ ] Text areas limited to `max-width: 65ch` (comfortable line length)
+- [ ] `text-wrap: pretty` prevents orphaned words
+
+### Forms & validation
+- [ ] All form fields have explicit `<label for="...">` associations
+- [ ] File input described by `aria-describedby` pointing to format hint
+- [ ] Error messages displayed inline as `role="alert"` banners
+- [ ] Required fields marked with `required` attribute
+
+---
+
 ## Running tests
 
 ```

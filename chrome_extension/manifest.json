@@ -5,9 +5,11 @@
   "description": "Transform any webpage into dyslexia-friendly text with AI-powered simplification, summarization, and text-to-speech.",
   "permissions": [
     "activeTab",
+    "tabs",
     "storage",
     "sidePanel",
-    "contextMenus"
+    "contextMenus",
+    "scripting"
   ],
   "host_permissions": [
     "http://localhost:3000/*"

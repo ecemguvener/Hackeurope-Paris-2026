@@ -48,6 +48,14 @@
   checkConnection();
   loadPageContext();
 
+  // ── Listen for Q button re-clicks when panel is already open ──
+  // Service worker sends LOAD_PAGE_CONTEXT after storage write completes.
+  chrome.runtime.onMessage.addListener((msg) => {
+    if (msg.type === 'LOAD_PAGE_CONTEXT') {
+      loadPageContext();
+    }
+  });
+
   // ── Tabs ───────────────────────────────────────────────────
   document.querySelectorAll('.sp-tab').forEach(tab => {
     tab.addEventListener('click', () => {
@@ -128,44 +136,47 @@
   }
 
   // ── Page context ───────────────────────────────────────────
+  // Called on init AND every time the service worker fires LOAD_PAGE_CONTEXT
+  // (i.e. whenever the Q button is clicked, even if the panel is already open).
   async function loadPageContext() {
-    // Read from session storage (set by service worker on Q button click).
-    // Retry once after a short delay to avoid a race where the panel opens
-    // before the service worker finishes writing to storage.
+    // Session storage is guaranteed written before LOAD_PAGE_CONTEXT fires,
+    // but on first init we add a small retry just in case.
     let data = await chrome.storage.session.get('pageContext');
     if (!data.pageContext) {
-      await new Promise(r => setTimeout(r, 200));
+      await new Promise(r => setTimeout(r, 150));
       data = await chrome.storage.session.get('pageContext');
     }
 
     if (data.pageContext) {
       pageContext = data.pageContext;
       pageTitleEl.textContent = pageContext.pageTitle || pageContext.pageUrl || 'Page loaded';
+
       // Prefer highlighted selection; fall back to full page text
       const fillText = pageContext.selectedText || pageContext.pageText || '';
       if (fillText) {
         transformInput.value = fillText;
         charCount.textContent = fillText.length;
       }
-    } else {
-      // Fallback: ask the content script directly
-      try {
-        const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-        if (tab?.id) {
-          const response = await chrome.tabs.sendMessage(tab.id, { type: 'GET_PAGE_TEXT' });
-          if (response) {
-            pageContext = response;
-            pageTitleEl.textContent = response.pageTitle || 'Current page';
-            const fillText = response.selectedText || response.pageText || '';
-            if (fillText) {
-              transformInput.value = fillText;
-              charCount.textContent = fillText.length;
-            }
+      return;
+    }
+
+    // Fallback: ask the content script directly (panel opened via toolbar)
+    try {
+      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+      if (tab?.id) {
+        const response = await chrome.tabs.sendMessage(tab.id, { type: 'GET_PAGE_TEXT' });
+        if (response) {
+          pageContext = response;
+          pageTitleEl.textContent = response.pageTitle || 'Current page';
+          const fillText = response.selectedText || response.pageText || '';
+          if (fillText) {
+            transformInput.value = fillText;
+            charCount.textContent = fillText.length;
           }
         }
-      } catch {
-        pageTitleEl.textContent = 'No page detected';
       }
+    } catch {
+      pageTitleEl.textContent = 'No page detected';
     }
   }
 
@@ -247,7 +258,6 @@
     addChatMessage('user', text);
     chatHistory.push({ role: 'user', content: text });
 
-    // Show typing indicator
     const typingEl = addChatMessage('assistant', '...');
 
     try {
@@ -255,7 +265,6 @@
       typingEl.querySelector('.sp-chat-bubble').textContent = result.reply;
       chatHistory.push({ role: 'assistant', content: result.reply });
 
-      // Save interaction
       ApiClient.saveInteraction({
         page_url: pageContext.pageUrl || '',
         page_title: pageContext.pageTitle || '',
@@ -312,7 +321,6 @@
       ttsResult.style.display = 'block';
       ttsAudio.play().catch(() => {});
 
-      // Save interaction
       ApiClient.saveInteraction({
         page_url: pageContext.pageUrl || '',
         page_title: pageContext.pageTitle || '',
