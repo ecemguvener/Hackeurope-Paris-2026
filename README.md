@@ -1,5 +1,7 @@
 # Qlarity — AI-Powered Dyslexia-Friendly Reader
 
+**Live app:** [https://qlarity.onrender.com](https://qlarity.onrender.com)
+
 Qlarity transforms dense corporate text into accessible, readable content using AI semantic rewriting, personalized user profiles, and natural text-to-speech. Built for the 15% of the workforce with dyslexia who struggle daily with Slack messages, Jira tickets, emails, and PDFs.
 
 ## The Problem
