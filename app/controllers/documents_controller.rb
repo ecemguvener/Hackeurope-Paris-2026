@@ -57,6 +57,19 @@ class DocumentsController < ApplicationController
         }
       ])
 
+      # Call SuperpositionRunner to generate the 4 adapted versions and save them
+      result = SuperpositionRunner.call(@document, current_user)
+      transformations = {}
+      result[:candidates].each do |candidate|
+        transformations[candidate[:style]] = { "content" => candidate[:content] }
+      end
+      transformations["_meta"] = {
+        "recommended_style" => result[:recommended_style],
+        "decision_trace" => result[:decision_trace],
+        "metrics" => result[:metrics]
+      }
+      @document.update!(transformations: transformations)
+
       redirect_to results_path(@document)
     else
       flash.now[:alert] = "Something went wrong. Please try again."

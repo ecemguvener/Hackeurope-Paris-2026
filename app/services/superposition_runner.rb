@@ -22,7 +22,7 @@ class SuperpositionRunner
 
     candidates = STYLE_KEYS.map do |style_key|
       prompt = build_prompt(style_key, text, personalization)
-      content = call_llm(prompt)
+      content = call_llm(prompt, style_key: style_key, text: text)
       {
         style: style_key,
         title: Document.style_for_key(style_key)&.dig(:title) || style_key.humanize,
@@ -158,15 +158,39 @@ class SuperpositionRunner
     PROMPT
   end
 
-  def self.call_llm(prompt)
-    client = Anthropic::Client.new(api_key: ENV["ANTHROPIC_API_KEY"])
-    response = client.messages(
+  def self.call_llm(prompt, style_key:, text:)
+    api_key = ENV["ANTHROPIC_API_KEY"]
+    raise "Missing ANTHROPIC_API_KEY" if api_key.blank?
+
+    client = Anthropic::Client.new(api_key: api_key)
+    response = client.messages.create(
       model: "claude-sonnet-4-6",
       max_tokens: 1024,
       messages: [ { role: "user", content: prompt } ]
     )
-    response.content.first.text
+    response.content.first.text.to_s.strip
   rescue => e
-    "Could not generate this version: #{e.message}"
+    Rails.logger.error("SuperpositionRunner Claude error: #{e.message}")
+    fallback_transform(style_key, text)
+  end
+
+  def self.fallback_transform(style_key, text)
+    cleaned = text.to_s.strip
+    return "" if cleaned.blank?
+
+    sentences = cleaned.split(/(?<=[.!?])\s+/).reject(&:blank?)
+
+    case style_key.to_s
+    when "bullet_points"
+      sentences.first(8).map { |sentence| "- #{sentence.strip}" }.join("\n")
+    when "plain_language"
+      cleaned.gsub(/\b(utilize|approximately|commence|terminate)\b/i,
+        "use")
+    when "restructured"
+      parts = sentences.each_slice(3).to_a
+      parts.each_with_index.map { |chunk, idx| "Section #{idx + 1}\n#{chunk.join(' ')}" }.join("\n\n")
+    else
+      sentences.map { |sentence| sentence.split.first(14).join(" ") }.join(". ")
+    end
   end
 end
