@@ -118,27 +118,96 @@ Web UI                          |
                         +----------------+
 ```
 
-## Setup
+## Getting Started
+
+### Prerequisites
+
+- **Ruby 3.4.8** — install via [rbenv](https://github.com/rbenv/rbenv) or [asdf](https://asdf-vm.com/)
+- **PostgreSQL** — install via `brew install postgresql` (macOS) or `apt install postgresql` (Ubuntu)
+- **Node.js** (optional, for asset pipeline)
+- **ImageMagick + Ghostscript** (only needed for scanned PDF extraction):
+  ```bash
+  # macOS
+  brew install imagemagick ghostscript
+
+  # Ubuntu/Debian
+  sudo apt install imagemagick ghostscript
+  ```
+
+### Step 1: Clone the repo
 
 ```bash
-# Install dependencies
+git clone https://github.com/ecemguvener/Hackeurope-Paris-2026.git
+cd Hackeurope-Paris-2026
+```
+
+### Step 2: Install Ruby dependencies
+
+```bash
 bundle install
+```
 
-# Set up database
-bin/rails db:create db:migrate db:seed
+### Step 3: Configure environment variables
 
-# Configure environment variables
+```bash
 cp .env.example .env
-# Edit .env with your API keys
+```
 
-# System dependencies (only needed for scanned PDFs)
-# macOS:
-brew install imagemagick ghostscript
-# Debian/Ubuntu:
-apt-get install imagemagick ghostscript
+Open `.env` and add your API keys:
 
-# Start the server
+```
+ANTHROPIC_API_KEY=sk-ant-...        # Required — get from https://console.anthropic.com
+ELEVENLABS_API_KEY=sk-...           # Optional — get from https://elevenlabs.io
+PAID_API_KEY=...                    # Optional — get from https://app.paid.ai
+```
+
+Without `ELEVENLABS_API_KEY`, TTS falls back to browser Speech Synthesis.
+Without `PAID_API_KEY`, billing runs in stub mode (all requests allowed, usage logged only).
+
+### Step 4: Set up the database
+
+```bash
+bin/rails db:create db:migrate db:seed
+```
+
+### Step 5: Start the development server
+
+```bash
 bin/dev
+```
+
+This starts both the Rails server and Tailwind CSS watcher. The app will be available at **http://localhost:3000**.
+
+Alternatively, start Rails alone:
+
+```bash
+bin/rails server
+```
+
+### Step 6: Install the Chrome Extension (optional)
+
+1. Open Chrome and go to `chrome://extensions`
+2. Enable **Developer mode** (top-right toggle)
+3. Click **Load unpacked** and select the `chrome_extension/` folder
+4. Click the extension icon → **Options** → set:
+   - **API URL**: `http://localhost:3000`
+   - **API Token**: copy from your user profile page (auto-generated on sign-up)
+5. Visit any web page, select text, and click the floating "Q" button
+
+### Verify everything works
+
+```bash
+# Open Rails console
+bin/rails console
+
+# Check billing mode
+BillingService.stub_mode?
+# => true (if PAID_API_KEY is not set)
+# => false (if PAID_API_KEY is set)
+
+# Test text extraction (requires ANTHROPIC_API_KEY)
+result = TextExtractor.call("path/to/any/file.pdf")
+result.clean_text
 ```
 
 ## Environment Variables
@@ -146,9 +215,22 @@ bin/dev
 | Variable | Required | Description |
 |----------|----------|-------------|
 | `ANTHROPIC_API_KEY` | Yes | Claude API key for text extraction, transformation, chat, and summarization |
-| `PAID_API_KEY` | No | Paid.ai API key for billing. Runs in stub mode (all requests allowed) when unset |
 | `ELEVENLABS_API_KEY` | No | ElevenLabs API key for TTS. Falls back to browser Speech Synthesis when unset |
+| `PAID_API_KEY` | No | Paid.ai API key for billing. Runs in stub mode (all requests allowed) when unset |
 | `PAID_FAIL_OPEN` | No | Default `true`. Allow requests to proceed if the billing API is unreachable |
+
+## Deploying to Render
+
+The project includes a `render.yaml` Blueprint for one-click deployment:
+
+1. Go to [dashboard.render.com](https://dashboard.render.com) → **New** → **Blueprint**
+2. Connect the GitHub repo (`ecemguvener/Hackeurope-Paris-2026`), branch `main`
+3. Set the secret environment variables when prompted:
+   - `RAILS_MASTER_KEY` — from `config/master.key`
+   - `ANTHROPIC_API_KEY`
+   - `ELEVENLABS_API_KEY`
+   - `PAID_API_KEY`
+4. Click **Apply** — Render creates the PostgreSQL database and web service, runs migrations, and starts Puma
 
 ## Text Extraction
 
