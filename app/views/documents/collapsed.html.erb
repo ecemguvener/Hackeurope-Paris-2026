@@ -44,10 +44,10 @@
 
   <%# Selected transformation displayed prominently %>
   <div class="bg-white rounded-2xl shadow-lg border border-indigo-200 overflow-hidden mb-6 animate-fade-in-up delay-300" data-controller="toggle speak">
-    <div class="bg-indigo-600 px-6 py-4">
+    <div class="bg-indigo-50 border-b border-indigo-200 px-6 py-4">
       <% if @document.selected_style %>
-        <h2 class="text-lg font-bold text-white"><%= @document.selected_style[:title] %></h2>
-        <p class="text-sm text-white"><%= @document.selected_style[:description] %></p>
+        <h2 class="text-lg font-bold text-indigo-700"><%= @document.selected_style[:title] %></h2>
+        <p class="text-sm text-indigo-600"><%= @document.selected_style[:description] %></p>
       <% end %>
     </div>
 
