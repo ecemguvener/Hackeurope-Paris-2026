@@ -1,9 +1,9 @@
 class SuperpositionRunner
   PROMPT_TEMPLATES = {
     "simplified" => "Rewrite the following with shorter sentences and clearer structure for someone with dyslexia:\n\n%s",
-    "bullet_points" => "Rewrite the following as clear bullet points, scannable and short:\n\n%s",
+    "bullet_points" => "Rewrite the following as short, scannable bullet points using the bullet character \"•\" only:\n\n%s",
     "plain_language" => "Rewrite the following replacing all jargon with simple everyday words:\n\n%s",
-    "restructured" => "Reorganize the following for easier reading flow with headers and sections:\n\n%s"
+    "restructured" => "Reorganize the following for easier reading flow with plain text section labels like \"Summary:\" and \"Details:\" (no markdown):\n\n%s"
   }.freeze
 
   DENSE_AVG_WORDS_PER_SENTENCE = 22.0
@@ -30,7 +30,7 @@ class SuperpositionRunner
         style: style_key,
         title: Document.style_for_key(style_key)&.dig(:title) || style_key.humanize,
         prompt: prompt,
-        content: content
+        content: normalize_output(content)
       }
     end
 
@@ -157,6 +157,12 @@ class SuperpositionRunner
       User-specific accessibility instructions:
       #{personalization}
 
+      Output requirements:
+      - Return plain text only.
+      - Do not include markdown symbols like #, ##, **, *, or backticks.
+      - Do not include prefaces like "Here is the rewritten version".
+      - Keep only the transformed content.
+
       #{PROMPT_TEMPLATES.fetch(style_key) % text}
     PROMPT
   end
@@ -195,5 +201,15 @@ class SuperpositionRunner
     else
       sentences.map { |sentence| sentence.split.first(14).join(" ") }.join(". ")
     end
+  end
+
+  def self.normalize_output(content)
+    text = content.to_s
+    text = text.gsub(/\A\s*Here is (the )?(rewritten|transformed).*\n+/i, "")
+    text = text.gsub(/^\s*#{Regexp.escape("#")}+\s*/, "")
+    text = text.gsub(/\*\*(.*?)\*\*/, '\1')
+    text = text.gsub(/`{1,3}/, "")
+    text = text.gsub(/^\s*[-*]\s+/, "• ")
+    text.strip
   end
 end
