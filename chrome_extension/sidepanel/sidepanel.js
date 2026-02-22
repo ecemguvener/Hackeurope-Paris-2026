@@ -22,7 +22,6 @@
   const transformResult = $('transformResult');
   const transformOutput = $('transformOutput');
   const transformLoading = $('transformLoading');
-  const applyBtn = $('applyBtn');
   const copyBtn = $('copyBtn');
 
   // Chat
@@ -195,24 +194,6 @@
     } finally {
       transformBtn.disabled = false;
       transformLoading.style.display = 'none';
-    }
-  });
-
-  // Apply to page
-  applyBtn.addEventListener('click', async () => {
-    if (!lastTransformResult) return;
-    try {
-      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-      if (tab?.id) {
-        const styleName = QLARITY.STYLES.find(s => s.key === selectedStyle)?.title || selectedStyle;
-        await chrome.tabs.sendMessage(tab.id, {
-          type: 'APPLY_OVERLAY',
-          text: lastTransformResult,
-          style: styleName
-        });
-      }
-    } catch (err) {
-      showError('Could not apply to page. Try refreshing the page.');
     }
   });
 
