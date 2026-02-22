@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      width: 280px;
+      padding: 16px;
+      background: #faf5ff;
+      color: #1e1b4b;
+    }
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    .header h1 {
+      font-size: 18px;
+      color: #6d28d9;
+    }
+    .logo {
+      width: 28px;
+      height: 28px;
+      background: linear-gradient(135deg, #7c3aed, #6d28d9);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+      font-size: 14px;
+    }
+    .status-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      background: white;
+      border-radius: 8px;
+      margin-bottom: 8px;
+      font-size: 13px;
+    }
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+    .dot.connected { background: #22c55e; }
+    .dot.disconnected { background: #ef4444; }
+    .user-name { font-weight: 600; }
+    button {
+      width: 100%;
+      padding: 10px;
+      border: none;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-bottom: 6px;
+      transition: transform 0.1s;
+    }
+    button:hover { transform: scale(1.02); }
+    .btn-primary {
+      background: linear-gradient(135deg, #7c3aed, #6d28d9);
+      color: white;
+    }
+    .btn-secondary {
+      background: white;
+      color: #6d28d9;
+      border: 1px solid #e5e7eb;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="logo">Q</div>
+    <h1>Qlarity</h1>
+  </div>
+
+  <div class="status-row">
+    <div id="statusDot" class="dot disconnected"></div>
+    <span id="statusText">Checking...</span>
+  </div>
+
+  <div id="userRow" class="status-row" style="display:none;">
+    <span class="user-name" id="userName"></span>
+  </div>
+
+  <button id="openPanel" class="btn-primary">Open Side Panel</button>
+  <button id="openSettings" class="btn-secondary">Settings</button>
+
+  <script src="../lib/constants.js"></script>
+  <script src="../lib/auth.js"></script>
+  <script src="../lib/api-client.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

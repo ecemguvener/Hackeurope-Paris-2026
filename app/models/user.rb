@@ -1,5 +1,6 @@
 class User < ApplicationRecord
   has_many :documents, dependent: :destroy
+  has_many :interactions, dependent: :destroy
 
   validates :name, presence: true
   validates :api_token, uniqueness: true, allow_nil: true

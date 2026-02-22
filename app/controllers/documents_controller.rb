@@ -34,12 +34,11 @@ class DocumentsController < ApplicationController
       return render :new, status: :unprocessable_entity
     end
 
-    # Quota check — before doing any expensive work
-    quota = BillingService.check_quota(BillingService.company_id)
-    unless quota.allowed
-      flash.now[:alert] = "Quota exceeded: #{quota.reason}"
-      @document = Document.new
-      return render :new, status: :unprocessable_entity
+    # Billing: check quota before extraction
+    quota = BillingService.check_quota(current_user, "text_extraction")
+    unless quota[:allowed]
+      flash.now[:alert] = "You've used all your credits. Please upgrade your plan."
+      return render :new, status: :payment_required
     end
 
     @document = current_user.documents.build
@@ -51,16 +50,39 @@ class DocumentsController < ApplicationController
     @document.content_hash     = Digest::SHA256.hexdigest(@document.original_content)
 
     if @document.save
-      BillingService.record_usage(
-        BillingService.company_id,
-        pages:      pages,
-        characters: characters
-      )
+      # Billing: record extraction usage
+      page_count = uploaded_file.content_type == "application/pdf" ? (PDF::Reader.new(uploaded_file.tempfile.path).page_count rescue 1) : 1
+      char_count = @document.extracted_text.to_s.length
+      BillingService.record_usage(current_user, [
+        {
+          event_name: "text_extraction",
+          data: { pages: page_count, characters: char_count, content_type: uploaded_file.content_type }
+        }
+      ])
+
+      # Single LLM call returns all 4 dyslexia-friendly formats.
+      result = SuperpositionRunner.call(@document, current_user)
+      transformations = {}
+      result[:candidates].each do |candidate|
+        transformations[candidate[:style]] = { "content" => candidate[:content] }
+      end
+      transformations["_meta"] = {
+        "recommended_style" => result[:recommended_style],
+        "decision_trace" => result[:decision_trace],
+        "metrics" => result[:metrics]
+      }
+      @document.update!(transformations: transformations)
+
+
       redirect_to results_path(@document)
     else
       flash.now[:alert] = "Something went wrong. Please try again."
       render :new, status: :unprocessable_entity
     end
+  rescue BillingService::QuotaExceeded => e
+    @document = Document.new
+    flash.now[:alert] = e.message
+    render :new, status: :payment_required
   end
 
   def results
@@ -69,17 +91,17 @@ class DocumentsController < ApplicationController
 
   def select_version
     @document = current_user.documents.find(params[:id])
-    version = params[:version].to_i
+    requested_version = params[:version].to_i
+    style_key = style_key_from_version(requested_version)
 
-    unless version.between?(1, Document::TRANSFORMATION_STYLES.length)
+    unless style_key
       redirect_to results_path(@document), alert: "Invalid version selection."
       return
     end
 
-    @document.update!(selected_version: version)
+    signals = collapse_signals_from_params
 
-    style = @document.selected_style
-    current_user.update!(preferred_style: style[:title]) if style
+    CollapseRunner.call(@document, style_key, signals)
 
     redirect_to collapsed_show_path(@document)
   end
@@ -99,25 +121,28 @@ class DocumentsController < ApplicationController
       return
     end
 
-    # Quota check — before calling ElevenLabs
-    quota = BillingService.check_quota(BillingService.company_id)
-    unless quota.allowed
-      redirect_to collapsed_show_path(@document), alert: "Quota exceeded: #{quota.reason}"
+    # Billing: check quota before TTS
+    quota = BillingService.check_quota(current_user, "tts_generation")
+    unless quota[:allowed]
+      redirect_to collapsed_show_path(@document), alert: "You've used all your credits. Please upgrade your plan."
       return
     end
 
     result = TTSService.speak(text, voice: voice)
     @document.update!(audio_url: result.audio_url)
 
-    # Estimate audio duration: ~150 words/minute at normal reading speed
-    audio_minutes = text.split.length / 150.0
-    BillingService.record_usage(
-      BillingService.company_id,
-      characters:    text.length,
-      audio_minutes: audio_minutes
-    )
+    # Billing: record TTS usage
+    audio_minutes = (text.length / 1000.0 * 0.4).round(2) # rough estimate
+    BillingService.record_usage(current_user, [
+      {
+        event_name: "tts_generation",
+        data: { characters: text.length, audio_minutes: audio_minutes, voice: voice }
+      }
+    ])
 
     redirect_to collapsed_show_path(@document), notice: "Speech generated successfully."
+  rescue BillingService::QuotaExceeded => e
+    redirect_to collapsed_show_path(@document), alert: e.message
   rescue KeyError => e
     redirect_to collapsed_show_path(@document), alert: e.message
   rescue => e
@@ -142,5 +167,18 @@ class DocumentsController < ApplicationController
   rescue => e
     Rails.logger.error("TextExtractor failed: #{e.message}")
     [ nil, nil, 0, 0 ]
+  end
+
+  def style_key_from_version(version)
+    return nil unless version.between?(1, Document::TRANSFORMATION_STYLES.length)
+
+    Document::TRANSFORMATION_STYLES[version - 1][:key]
+  end
+
+  def collapse_signals_from_params
+    {
+      dwell_ms: params[:dwell_ms],
+      tts_style: params[:tts_style]
+    }.compact
   end
 end

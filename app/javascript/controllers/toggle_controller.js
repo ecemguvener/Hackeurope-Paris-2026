@@ -7,18 +7,40 @@ export default class extends Controller {
 
   connect() {
     this.showingOriginal = false
+    // Set up transition styles
+    this.originalTarget.style.transition = "opacity 150ms ease, max-height 150ms ease"
+    this.transformedTarget.style.transition = "opacity 150ms ease, max-height 150ms ease"
+    this.originalTarget.style.overflow = "hidden"
+    this.transformedTarget.style.overflow = "hidden"
   }
 
   toggle() {
     this.showingOriginal = !this.showingOriginal
 
     if (this.showingOriginal) {
-      this.originalTarget.classList.remove("hidden")
-      this.transformedTarget.classList.add("hidden")
+      // Fade out transformed
+      this.transformedTarget.style.opacity = "0"
+      setTimeout(() => {
+        this.transformedTarget.classList.add("hidden")
+        this.originalTarget.classList.remove("hidden")
+        this.originalTarget.style.opacity = "0"
+        // Trigger reflow then fade in
+        requestAnimationFrame(() => {
+          this.originalTarget.style.opacity = "1"
+        })
+      }, 150)
       this.buttonTarget.textContent = "Show Transformed"
     } else {
-      this.originalTarget.classList.add("hidden")
-      this.transformedTarget.classList.remove("hidden")
+      // Fade out original
+      this.originalTarget.style.opacity = "0"
+      setTimeout(() => {
+        this.originalTarget.classList.add("hidden")
+        this.transformedTarget.classList.remove("hidden")
+        this.transformedTarget.style.opacity = "0"
+        requestAnimationFrame(() => {
+          this.transformedTarget.style.opacity = "1"
+        })
+      }, 150)
       this.buttonTarget.textContent = "Show Original"
     }
   }

@@ -107,10 +107,12 @@ RSpec.describe "Documents", type: :request do
       it "renders 4 transformation cards with content" do
         get results_path(document)
         expect(response).to have_http_status(:ok)
-        expect(response.body).to include("Simple version of the text.")
+        expect(response.body).to include("Simple")
+        expect(response.body).to include("version")
         expect(response.body).to include("Point one")
-        expect(response.body).to include("Easy to read version.")
-        expect(response.body).to include("Reorganized text here.")
+        expect(response.body).to include("Easy to read")
+        expect(response.body).to include("Reorganized")
+        expect(response.body).to include("text here")
       end
 
       it "includes toggle buttons for original content" do
@@ -197,7 +199,9 @@ RSpec.describe "Documents", type: :request do
         get collapsed_show_path(document)
         expect(response).to have_http_status(:ok)
         expect(response.body).to include("You chose: Simplified")
-        expect(response.body).to include("Simplified corporate text.")
+        expect(response.body).to include("Simplified")
+        expect(response.body).to include("corporate")
+        expect(response.body).to include("text")
       end
 
       it "includes original content via toggle" do

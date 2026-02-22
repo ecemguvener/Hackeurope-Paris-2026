@@ -14,17 +14,19 @@ module Api
         return render json: { error: "url and page_text are required" }, status: :unprocessable_entity
       end
 
-      quota = BillingService.check_quota(BillingService.company_id)
-      unless quota.allowed
-        return render json: { error: quota.reason }, status: :payment_required
+      quota = BillingService.check_quota(@api_user, "web_reader")
+      unless quota[:allowed]
+        return render json: { error: "You've used all your credits. Please upgrade your plan." }, status: :payment_required
       end
 
       result = WebReaderAgent.call(url: url, page_text: page_text, style: style)
 
-      BillingService.record_usage(
-        BillingService.company_id,
-        characters: result[:accessible_content].length
-      )
+      BillingService.record_usage(@api_user, [
+        {
+          event_name: "web_reader",
+          data: { characters: result[:accessible_content].length, url: url }
+        }
+      ])
 
       render json: {
         accessible_content: result[:accessible_content],

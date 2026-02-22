@@ -1,5 +1,5 @@
-User.find_or_create_by!(name: "Demo User") do |user|
-  user.profile = {
+user = User.find_or_create_by!(name: "Demo User") do |u|
+  u.profile = {
     sentence_length: "short",
     font_preference: "sans-serif",
     color_overlay: "none",
@@ -9,12 +9,18 @@ User.find_or_create_by!(name: "Demo User") do |user|
     line_spacing: "relaxed",
     highlight_keywords: true
   }
-  user.superposition_states = {
+  u.superposition_states = {
     short_form: { intensity: "minimal", transformations: [ "spacing" ] },
     long_form: { intensity: "moderate", transformations: %w[simplify bullets spacing] },
     technical: { intensity: "maximum", transformations: %w[simplify jargon bullets restructure] }
   }
-  user.preferred_style = nil
+  u.preferred_style = nil
 end
 
-puts "Seeded demo user: #{User.first.name}"
+# Ensure Demo User has an API token for the Chrome extension
+if user.api_token.blank?
+  user.update!(api_token: SecureRandom.hex(32))
+end
+
+puts "Seeded demo user: #{user.name}"
+puts "API Token: #{user.api_token}"

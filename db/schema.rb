@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_21_182644) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_21_225436) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -43,6 +43,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_21_182644) do
   end
 
   create_table "documents", force: :cascade do |t|
+    t.string "audio_url"
     t.string "content_hash"
     t.datetime "created_at", null: false
     t.text "extracted_text"
@@ -55,16 +56,33 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_21_182644) do
     t.index ["user_id"], name: "index_documents_on_user_id"
   end
 
+  create_table "interactions", force: :cascade do |t|
+    t.string "action_type"
+    t.datetime "created_at", null: false
+    t.text "input_text"
+    t.jsonb "metadata"
+    t.text "output_text"
+    t.string "page_title"
+    t.string "page_url"
+    t.string "style"
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["user_id"], name: "index_interactions_on_user_id"
+  end
+
   create_table "users", force: :cascade do |t|
+    t.string "api_token"
     t.datetime "created_at", null: false
     t.string "name"
     t.string "preferred_style"
     t.jsonb "profile", default: {}
     t.jsonb "superposition_states", default: {}
     t.datetime "updated_at", null: false
+    t.index ["api_token"], name: "index_users_on_api_token", unique: true
   end
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "documents", "users"
+  add_foreign_key "interactions", "users"
 end

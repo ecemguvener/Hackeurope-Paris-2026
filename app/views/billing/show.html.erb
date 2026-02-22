@@ -1,166 +1,147 @@
-<div class="w-full max-w-3xl mx-auto py-10 px-4">
-  <div class="text-center mb-8">
+<div class="w-full max-w-4xl mx-auto py-10 px-4">
+  <div class="text-center mb-10 animate-fade-in">
     <h1 class="text-4xl font-bold text-gray-900 mb-2">Billing & Usage</h1>
-    <p class="text-gray-600">Company ID: <code class="bg-gray-100 px-2 py-0.5 rounded text-sm font-mono"><%= @company_id %></code></p>
+    <p class="text-gray-600">Monitor your plan, credits, and usage.</p>
   </div>
 
   <%# Stub mode banner %>
   <% if @stub_mode %>
-    <div class="bg-amber-50 border border-amber-200 rounded-2xl p-5 mb-6">
+    <div class="bg-amber-50 border border-amber-200 rounded-2xl p-6 mb-8 animate-fade-in-up">
       <div class="flex items-start gap-3">
-        <svg class="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
-        </svg>
+        <span class="text-2xl">⚠️</span>
         <div>
-          <p class="font-semibold text-amber-800">Running in stub mode — billing not enforced</p>
-          <p class="text-sm text-amber-700 mt-1">
-            Set <code class="bg-amber-100 px-1 rounded font-mono">PAID_API_URL</code> and
-            <code class="bg-amber-100 px-1 rounded font-mono">PAID_API_KEY</code> in your
-            <code class="bg-amber-100 px-1 rounded font-mono">.env</code> file to enable real quota enforcement.
+          <h3 class="font-bold text-amber-800 mb-1">Stub Mode Active</h3>
+          <p class="text-sm text-amber-700 mb-3">
+            Paid.ai is not configured. All requests are allowed and usage is only logged.
+            To enable real billing, add the following to your <code class="bg-amber-100 px-1.5 py-0.5 rounded text-xs font-mono">.env</code> file:
+          </p>
+          <div class="bg-amber-100/50 rounded-lg p-4 font-mono text-xs text-amber-900 space-y-1">
+            <p>PAID_API_URL=https://api.paid.ai</p>
+            <p>PAID_API_KEY=your_paid_api_key</p>
+            <p>PAID_COMPANY_ID=your_company_id</p>
+            <p>PAID_FAIL_OPEN=true</p>
+          </div>
+          <p class="text-sm text-amber-700 mt-3">
+            Get your keys at <a href="https://app.paid.ai" target="_blank" class="font-medium underline hover:text-amber-900">app.paid.ai</a> →
+            Agent Integration → API Keys.
           </p>
         </div>
       </div>
     </div>
   <% end %>
 
-  <%# Error banner %>
-  <% if @summary[:error].present? %>
-    <div class="bg-red-50 border border-red-200 rounded-2xl p-5 mb-6">
-      <p class="text-red-700 text-sm"><strong>Billing error:</strong> <%= @summary[:error] %></p>
+  <%# Plan status + credits row %>
+  <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8 animate-fade-in-up delay-100">
+    <div class="bg-white rounded-2xl shadow-md border border-gray-200 p-6 text-center hover-lift relative overflow-hidden">
+      <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-500 to-purple-500"></div>
+      <p class="text-sm text-gray-500 mb-1">Plan</p>
+      <p class="text-xl font-bold text-gradient"><%= @summary[:plan] %></p>
+    </div>
+    <div class="bg-white rounded-2xl shadow-md border border-gray-200 p-6 text-center hover-lift relative overflow-hidden">
+      <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 to-emerald-600"></div>
+      <p class="text-sm text-gray-500 mb-1">Credits Remaining</p>
+      <p class="text-xl font-bold text-gradient">
+        <%= @summary[:remaining].present? ? number_with_delimiter(@summary[:remaining]) : "Unlimited" %>
+      </p>
+    </div>
+    <div class="bg-white rounded-2xl shadow-md border border-gray-200 p-6 text-center hover-lift relative overflow-hidden">
+      <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-500 to-orange-500"></div>
+      <p class="text-sm text-gray-500 mb-1">Documents Processed</p>
+      <p class="text-xl font-bold text-gradient"><%= @documents.count %></p>
+    </div>
+  </div>
+
+  <%# Credit usage progress bar %>
+  <% unless @stub_mode %>
+    <div class="bg-white rounded-2xl shadow-md border border-gray-200 p-6 mb-8 animate-fade-in-up delay-200 relative overflow-hidden">
+      <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-500 to-purple-500"></div>
+      <h2 class="text-lg font-bold text-gray-900 mb-4">Credit Usage</h2>
+      <% if @summary[:bundles].present? %>
+        <% @summary[:bundles].each do |bundle| %>
+          <%
+            granted = bundle.dig("granted_amount") || bundle.dig("total") || 0
+            used = bundle.dig("used_amount") || bundle.dig("used") || 0
+            pct = granted > 0 ? [ (used.to_f / granted * 100).round, 100 ].min : 0
+            bar_color = pct > 90 ? "from-red-500 to-red-600" : pct > 70 ? "from-amber-500 to-amber-600" : "from-emerald-500 to-emerald-600"
+          %>
+          <div class="mb-4 last:mb-0">
+            <div class="flex justify-between text-sm mb-1">
+              <span class="font-medium text-gray-700"><%= bundle["name"] || "Credit Bundle" %></span>
+              <span class="text-gray-500"><%= number_with_delimiter(used) %> / <%= number_with_delimiter(granted) %></span>
+            </div>
+            <div class="w-full bg-gray-100 rounded-full h-3 overflow-hidden">
+              <div class="h-3 rounded-full bg-gradient-to-r <%= bar_color %> transition-all duration-500" style="width: <%= pct %>%"></div>
+            </div>
+          </div>
+        <% end %>
+      <% else %>
+        <p class="text-gray-500 text-sm">No credit bundles found for this account.</p>
+      <% end %>
     </div>
   <% end %>
 
-  <%# Plan card %>
-  <div class="bg-white rounded-2xl shadow-md border border-gray-200 p-6 mb-6">
-    <div class="flex items-center justify-between mb-4">
-      <h2 class="text-lg font-bold text-gray-900">Plan Status</h2>
-      <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium
-        <%= @summary[:plan] == 'active' ? 'bg-green-100 text-green-800' :
-            @summary[:plan] == 'stub'   ? 'bg-gray-100 text-gray-600' :
-                                          'bg-amber-100 text-amber-800' %>">
-        <%= @summary[:plan].humanize %>
-      </span>
-    </div>
-
-    <div class="grid grid-cols-2 gap-4 mb-5">
-      <div>
-        <p class="text-xs text-gray-500 uppercase tracking-wide font-medium">Company</p>
-        <p class="text-gray-900 font-semibold mt-0.5"><%= @summary[:customer_name] %></p>
-      </div>
-      <div>
-        <p class="text-xs text-gray-500 uppercase tracking-wide font-medium">External ID</p>
-        <p class="text-gray-900 font-mono text-sm mt-0.5"><%= @summary[:external_id] %></p>
-      </div>
-    </div>
-
-    <%# Usage bar (only when limits are configured) %>
-    <% if @summary[:total].to_i > 0 %>
-      <% pct = [(@summary[:used].to_f / @summary[:total] * 100).round, 100].min %>
-      <div class="mb-2 flex items-center justify-between text-sm text-gray-600">
-        <span>Credits used</span>
-        <span class="font-semibold"><%= @summary[:used] %> / <%= @summary[:total] %></span>
-      </div>
-      <div class="w-full bg-gray-100 rounded-full h-3 overflow-hidden">
-        <div class="h-3 rounded-full transition-all duration-500
-          <%= pct >= 90 ? 'bg-red-500' : pct >= 70 ? 'bg-amber-400' : 'bg-indigo-500' %>"
-             style="width: <%= pct %>%"
-             role="progressbar"
-             aria-valuenow="<%= pct %>"
-             aria-valuemin="0"
-             aria-valuemax="100">
-        </div>
-      </div>
-      <p class="text-xs text-gray-500 mt-1"><%= @summary[:available] %> credits remaining</p>
-    <% elsif @summary[:total].to_i == -1 %>
-      <p class="text-sm text-gray-500">
-        <% if @stub_mode %>
-          Quota limits are not enforced in stub mode.
-        <% else %>
-          No credit limits configured — usage is unlimited.
-        <% end %>
-      </p>
-    <% else %>
-      <p class="text-sm text-amber-600">No active plan / entitlements found for this customer in Paid.ai.</p>
-    <% end %>
-  </div>
-
-  <%# Entitlement breakdown %>
-  <% if @summary[:entitlements].any? %>
-    <div class="bg-white rounded-2xl shadow-md border border-gray-200 p-6 mb-6">
+  <%# Entitlements / features table %>
+  <% if !@stub_mode && @summary[:customer].present? %>
+    <div class="bg-white rounded-2xl shadow-md border border-gray-200 p-6 mb-8 animate-fade-in-up delay-300 relative overflow-hidden">
+      <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 to-teal-500"></div>
       <h2 class="text-lg font-bold text-gray-900 mb-4">Entitlements</h2>
-      <div class="overflow-x-auto">
-        <table class="w-full text-sm text-left">
-          <thead>
-            <tr class="border-b border-gray-100">
-              <th class="pb-2 text-xs font-medium text-gray-500 uppercase tracking-wide">Product</th>
-              <th class="pb-2 text-xs font-medium text-gray-500 uppercase tracking-wide text-right">Total</th>
-              <th class="pb-2 text-xs font-medium text-gray-500 uppercase tracking-wide text-right">Used</th>
-              <th class="pb-2 text-xs font-medium text-gray-500 uppercase tracking-wide text-right">Available</th>
-              <th class="pb-2 text-xs font-medium text-gray-500 uppercase tracking-wide">Expires</th>
-            </tr>
-          </thead>
-          <tbody>
-            <% @summary[:entitlements].each do |ent| %>
-              <tr class="border-b border-gray-50 last:border-0">
-                <td class="py-2 text-gray-700 font-mono text-xs"><%= ent["productId"] || "—" %></td>
-                <td class="py-2 text-gray-900 text-right"><%= ent["total"] %></td>
-                <td class="py-2 text-gray-900 text-right"><%= ent["used"] %></td>
-                <td class="py-2 text-right font-semibold
-                  <%= ent["available"].to_i > 0 ? 'text-green-700' : 'text-red-600' %>">
-                  <%= ent["available"] %>
-                </td>
-                <td class="py-2 text-gray-500"><%= ent["endDate"] || "—" %></td>
-              </tr>
-            <% end %>
-          </tbody>
-        </table>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div class="flex items-center justify-between bg-gray-50 rounded-lg px-4 py-3">
+          <span class="text-sm text-gray-600 font-medium">Text Extraction</span>
+          <span class="text-sm font-semibold text-emerald-600">Included</span>
+        </div>
+        <div class="flex items-center justify-between bg-gray-50 rounded-lg px-4 py-3">
+          <span class="text-sm text-gray-600 font-medium">AI Transformation</span>
+          <span class="text-sm font-semibold text-emerald-600">Included</span>
+        </div>
+        <div class="flex items-center justify-between bg-gray-50 rounded-lg px-4 py-3">
+          <span class="text-sm text-gray-600 font-medium">Text-to-Speech</span>
+          <span class="text-sm font-semibold text-emerald-600">Included</span>
+        </div>
+        <div class="flex items-center justify-between bg-gray-50 rounded-lg px-4 py-3">
+          <span class="text-sm text-gray-600 font-medium">Chrome Extension</span>
+          <span class="text-sm font-semibold text-emerald-600">Included</span>
+        </div>
       </div>
     </div>
   <% end %>
 
   <%# Recent documents %>
-  <div class="bg-white rounded-2xl shadow-md border border-gray-200 p-6 mb-6">
+  <div class="bg-white rounded-2xl shadow-md border border-gray-200 p-6 animate-fade-in-up delay-400 relative overflow-hidden">
+    <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-500 to-orange-500"></div>
     <h2 class="text-lg font-bold text-gray-900 mb-4">Recent Documents</h2>
-    <% recent = current_user.documents.order(created_at: :desc).limit(5) %>
-    <% if recent.any? %>
-      <ul class="divide-y divide-gray-100">
-        <% recent.each do |doc| %>
-          <li class="py-3 flex items-center justify-between">
+    <% if @documents.any? %>
+      <div class="divide-y divide-gray-100">
+        <% @documents.each do |document| %>
+          <div class="flex items-center justify-between py-4">
             <div>
-              <p class="text-sm text-gray-800 font-medium">
-                Document #<%= doc.id %>
-                <% if doc.audio_url.present? %>
-                  <span class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-indigo-100 text-indigo-700">TTS</span>
-                <% end %>
+              <p class="font-medium text-gray-900">
+                <%= document.file.attached? ? document.file.filename : "Document ##{document.id}" %>
               </p>
-              <p class="text-xs text-gray-400 mt-0.5"><%= doc.created_at.strftime("%b %d, %Y %H:%M") %></p>
+              <p class="text-sm text-gray-500">
+                <%= document.created_at.strftime("%b %d, %Y at %l:%M %p") %>
+                · <%= number_with_delimiter(document.extracted_text.to_s.length) %> chars
+              </p>
             </div>
-            <div class="text-right text-xs text-gray-500">
-              <%= doc.original_content.to_s.length %> chars
+            <div class="flex items-center gap-3">
+              <% if document.version_selected? && document.selected_style %>
+                <span class="text-xs bg-green-100 text-green-700 font-medium px-2 py-1 rounded-full">
+                  <%= document.selected_style[:title] %>
+                </span>
+              <% end %>
+              <% if document.audio_url.present? %>
+                <span class="text-xs bg-indigo-100 text-indigo-700 font-medium px-2 py-1 rounded-full">TTS</span>
+              <% end %>
             </div>
-          </li>
+          </div>
         <% end %>
-      </ul>
+      </div>
     <% else %>
-      <p class="text-sm text-gray-400">No documents yet.</p>
+      <div class="text-center py-8">
+        <p class="text-gray-500 mb-4">No documents yet.</p>
+        <%= link_to "Upload a Document", upload_path,
+              class: "inline-block text-white font-semibold py-2 px-6 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 shadow-lg transition-all" %>
+      </div>
     <% end %>
   </div>
-
-  <%# Setup instructions (stub mode) %>
-  <% if @stub_mode %>
-    <div class="bg-indigo-50 border border-indigo-100 rounded-2xl p-6">
-      <h2 class="text-base font-bold text-indigo-900 mb-3">Enable real billing</h2>
-      <ol class="text-sm text-indigo-800 space-y-2 list-decimal list-inside">
-        <li>Create a customer in <a href="https://agentpaid.io" target="_blank" class="underline">Paid.ai</a> with <code class="bg-indigo-100 px-1 rounded font-mono">externalId = "<%= @company_id %>"</code></li>
-        <li>Create an Agent/Product and attach an Order with entitlements for that customer</li>
-        <li>Add to <code class="bg-indigo-100 px-1 rounded font-mono">.env</code>:
-          <pre class="mt-1 bg-indigo-100 rounded p-2 text-xs font-mono">PAID_API_URL=https://api.agentpaid.io/api/v1
-PAID_API_KEY=your_key_here
-PAID_COMPANY_ID=<%= @company_id %></pre>
-        </li>
-        <li>Restart the server — quota enforcement is automatic.</li>
-      </ol>
-    </div>
-  <% end %>
 </div>

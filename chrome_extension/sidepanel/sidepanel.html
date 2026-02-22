@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Qlarity</title>
+  <link rel="stylesheet" href="sidepanel.css">
+</head>
+<body>
+  <!-- Header -->
+  <div class="sp-header">
+    <div class="sp-header-left">
+      <div class="sp-logo">Q</div>
+      <h1>Qlarity</h1>
+    </div>
+    <div id="connectionDot" class="sp-dot disconnected" title="Checking connection..."></div>
+  </div>
+
+  <!-- Page context bar -->
+  <div id="pageContext" class="sp-context">
+    <span id="pageTitle">No page detected</span>
+  </div>
+
+  <!-- Tabs -->
+  <div class="sp-tabs">
+    <button class="sp-tab active" data-tab="transform">Transform</button>
+    <button class="sp-tab" data-tab="chat">Chat</button>
+    <button class="sp-tab" data-tab="listen">Listen</button>
+  </div>
+
+  <!-- Transform Tab -->
+  <div id="tab-transform" class="sp-panel active">
+    <div class="sp-section">
+      <label class="sp-label">Style</label>
+      <div id="styleGrid" class="sp-style-grid"></div>
+    </div>
+
+    <div class="sp-section">
+      <label class="sp-label">Text to transform</label>
+      <textarea id="transformInput" class="sp-textarea" rows="4" placeholder="Select text on the page, or paste text here..."></textarea>
+      <div class="sp-char-count"><span id="charCount">0</span> characters</div>
+    </div>
+
+    <button id="transformBtn" class="sp-btn-primary">Transform</button>
+
+    <div id="transformResult" class="sp-result" style="display:none;">
+      <label class="sp-label">Result</label>
+      <div id="transformOutput" class="sp-output"></div>
+      <div class="sp-actions">
+        <button id="applyBtn" class="sp-btn-action">Apply to Page</button>
+        <button id="copyBtn" class="sp-btn-action sp-btn-secondary">Copy</button>
+      </div>
+    </div>
+
+    <div id="transformLoading" class="sp-loading" style="display:none;">
+      <div class="sp-spinner"></div>
+      <span>Transforming...</span>
+    </div>
+  </div>
+
+  <!-- Chat Tab -->
+  <div id="tab-chat" class="sp-panel">
+    <div id="chatMessages" class="sp-chat-messages">
+      <div class="sp-chat-msg assistant">
+        <div class="sp-chat-bubble">Hi! I'm Qlarity. Ask me anything about this page, or request help understanding the content.</div>
+      </div>
+    </div>
+    <div class="sp-chat-input-row">
+      <input id="chatInput" type="text" class="sp-chat-input" placeholder="Ask about this page...">
+      <button id="chatSend" class="sp-btn-send">→</button>
+    </div>
+  </div>
+
+  <!-- Listen Tab -->
+  <div id="tab-listen" class="sp-panel">
+    <div class="sp-section">
+      <label class="sp-label">Voice</label>
+      <div id="voiceGrid" class="sp-voice-grid"></div>
+    </div>
+
+    <div class="sp-section">
+      <label class="sp-label">Speed</label>
+      <div id="speedBtns" class="sp-speed-btns"></div>
+    </div>
+
+    <div class="sp-section">
+      <label class="sp-label">Text to read</label>
+      <textarea id="ttsInput" class="sp-textarea" rows="3" placeholder="Text from transform result or paste here..."></textarea>
+    </div>
+
+    <button id="ttsBtn" class="sp-btn-primary">Generate Speech</button>
+
+    <div id="ttsLoading" class="sp-loading" style="display:none;">
+      <div class="sp-spinner"></div>
+      <span>Generating audio...</span>
+    </div>
+
+    <div id="ttsResult" style="display:none;">
+      <audio id="ttsAudio" controls class="sp-audio"></audio>
+    </div>
+  </div>
+
+  <!-- Error bar -->
+  <div id="errorBar" class="sp-error" style="display:none;"></div>
+
+  <script src="../lib/constants.js"></script>
+  <script src="../lib/auth.js"></script>
+  <script src="../lib/api-client.js"></script>
+  <script src="sidepanel.js"></script>
+</body>
+</html>
