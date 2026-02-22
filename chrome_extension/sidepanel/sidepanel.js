@@ -129,17 +129,26 @@
 
   // ── Page context ───────────────────────────────────────────
   async function loadPageContext() {
-    // Read from session storage (set by service worker)
-    const data = await chrome.storage.session.get('pageContext');
+    // Read from session storage (set by service worker on Q button click).
+    // Retry once after a short delay to avoid a race where the panel opens
+    // before the service worker finishes writing to storage.
+    let data = await chrome.storage.session.get('pageContext');
+    if (!data.pageContext) {
+      await new Promise(r => setTimeout(r, 200));
+      data = await chrome.storage.session.get('pageContext');
+    }
+
     if (data.pageContext) {
       pageContext = data.pageContext;
       pageTitleEl.textContent = pageContext.pageTitle || pageContext.pageUrl || 'Page loaded';
-      if (pageContext.selectedText) {
-        transformInput.value = pageContext.selectedText;
-        charCount.textContent = pageContext.selectedText.length;
+      // Prefer highlighted selection; fall back to full page text
+      const fillText = pageContext.selectedText || pageContext.pageText || '';
+      if (fillText) {
+        transformInput.value = fillText;
+        charCount.textContent = fillText.length;
       }
     } else {
-      // Try to get from active tab
+      // Fallback: ask the content script directly
       try {
         const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
         if (tab?.id) {
@@ -147,9 +156,10 @@
           if (response) {
             pageContext = response;
             pageTitleEl.textContent = response.pageTitle || 'Current page';
-            if (response.selectedText) {
-              transformInput.value = response.selectedText;
-              charCount.textContent = response.selectedText.length;
+            const fillText = response.selectedText || response.pageText || '';
+            if (fillText) {
+              transformInput.value = fillText;
+              charCount.textContent = fillText.length;
             }
           }
         }
