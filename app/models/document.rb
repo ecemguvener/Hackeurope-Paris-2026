@@ -19,6 +19,19 @@ class Document < ApplicationRecord
     end
   end
 
+  def self.style_keys
+    TRANSFORMATION_STYLES.map { |style| style[:key] }
+  end
+
+  def self.style_for_key(key)
+    TRANSFORMATION_STYLES.find { |style| style[:key] == key.to_s }
+  end
+
+  def self.selected_version_for_style(key)
+    index = TRANSFORMATION_STYLES.index { |style| style[:key] == key.to_s }
+    index ? index + 1 : nil
+  end
+
   def transformations_ready?
     transformations.present? && transformations.values.any? { |v| v["content"].present? }
   end
