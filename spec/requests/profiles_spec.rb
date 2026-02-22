@@ -83,4 +83,37 @@ RSpec.describe "Profiles", type: :request do
       end
     end
   end
+
+  describe "POST /profile/assessment" do
+    it "updates profile via reading test analyser inputs" do
+      post profile_assessment_path, params: {
+        retyped_text: "The cat wearing a hat sat on the mat",
+        self_described_difficulty: "Long words and skipping words",
+        time_taken_seconds: 9
+      }
+
+      user.reload
+      expect(response).to redirect_to(profile_path)
+      expect(user.profile).to be_present
+      expect(user.preferred_style).to be_present
+    end
+  end
+
+  describe "PATCH /profile/readability" do
+    it "sets readability mode to strong" do
+      patch profile_readability_path, params: { mode: "strong" }
+
+      user.reload
+      expect(response).to redirect_to(profile_path)
+      expect(user.profile["readability_mode"]).to eq("strong")
+    end
+
+    it "rejects invalid readability mode" do
+      patch profile_readability_path, params: { mode: "bad" }
+
+      user.reload
+      expect(response).to redirect_to(profile_path)
+      expect(user.profile["readability_mode"]).to be_nil
+    end
+  end
 end

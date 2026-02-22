@@ -23,6 +23,8 @@ Rails.application.routes.draw do
 
   # Profile
   get "profile", to: "profiles#show", as: :profile
+  post "profile/assessment", to: "profiles#assessment", as: :profile_assessment
+  patch "profile/readability", to: "profiles#readability", as: :profile_readability
 
   # Billing
   get "billing", to: "billing#show", as: :billing

@@ -54,6 +54,43 @@
     </div>
   <% end %>
 
+  <%# Reading Assessment %>
+  <div class="bg-white rounded-2xl shadow-md border border-gray-200 p-6 mb-8 animate-fade-in-up delay-350 relative overflow-hidden">
+    <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-fuchsia-500 to-indigo-500"></div>
+    <h2 class="text-lg font-bold text-gray-900 mb-2">Reading Assessment (Dyslexia Check)</h2>
+    <p class="text-sm text-gray-600 mb-4">
+      Retype the sentence below and describe what feels difficult. This helps personalize transformations.
+    </p>
+
+    <div class="rounded-lg border border-fuchsia-200 bg-fuchsia-50 p-4 mb-4">
+      <p class="text-sm text-fuchsia-700 font-medium">Sentence to retype:</p>
+      <p class="text-base text-gray-900 mt-1"><%= ReadingTestAnalyser::TEST_SENTENCE %></p>
+    </div>
+
+    <%= form_with url: profile_assessment_path, method: :post, data: { controller: "reading-test", action: "submit->reading-test#stamp" } do |f| %>
+      <div class="space-y-4">
+        <div>
+          <label for="retyped_text" class="block text-sm font-medium text-gray-700 mb-1">Retyped sentence</label>
+          <%= f.text_area :retyped_text, id: "retyped_text", rows: 3, required: true,
+                class: "w-full rounded-lg border border-gray-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" %>
+        </div>
+        <div>
+          <label for="self_described_difficulty" class="block text-sm font-medium text-gray-700 mb-1">What felt difficult?</label>
+          <%= f.text_area :self_described_difficulty, id: "self_described_difficulty", rows: 3, required: true,
+                placeholder: "e.g. long words, letter swaps, losing place in sentence...",
+                class: "w-full rounded-lg border border-gray-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" %>
+        </div>
+      </div>
+
+      <%= f.hidden_field :time_taken_seconds, value: 1, data: { reading_test_target: "time" } %>
+
+      <div class="mt-4">
+        <%= f.submit "Save Assessment",
+              class: "inline-block text-white font-semibold py-2 px-5 rounded-lg bg-gradient-to-r from-fuchsia-600 to-indigo-600 hover:from-fuchsia-500 hover:to-indigo-500 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2" %>
+      </div>
+    <% end %>
+  </div>
+
   <%# Document History %>
   <div class="bg-white rounded-2xl shadow-md border border-gray-200 p-6 animate-fade-in-up delay-400 relative overflow-hidden">
     <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-500 to-orange-500"></div>

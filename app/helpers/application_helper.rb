@@ -44,21 +44,26 @@ module ApplicationHelper
     profile["reading_speed"] == "slow" ? "dys-size-large" : "dys-size-normal"
   end
 
+  def dyslexia_strong_mode?(user)
+    user&.profile&.dig("readability_mode").to_s == "strong"
+  end
+
   def dyslexia_reading_classes(user)
     [
       "dyslexia-content dyslexia-surface",
       dyslexia_background_class(user),
       dyslexia_font_class(user),
-      dyslexia_size_class(user)
+      dyslexia_size_class(user),
+      (dyslexia_strong_mode?(user) ? "dys-mode-strong" : "dys-mode-standard")
     ].join(" ")
   end
 
-  def dyslexia_reading_html(text)
+  def dyslexia_reading_html(text, user = nil)
     raw_text = text.to_s
     return "" if raw_text.blank?
 
     escaped = ERB::Util.html_escape(raw_text)
-    highlighted = highlight_keywords(escaped)
+    highlighted = dyslexia_strong_mode?(user) ? highlight_keywords(escaped) : escaped
     simple_format(highlighted, {}, sanitize: false)
   end
 
