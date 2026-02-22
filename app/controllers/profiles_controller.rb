@@ -5,6 +5,7 @@ class ProfilesController < ApplicationController
   end
 
   def assessment
+    # Pull quick inputs from the form and keep defaults safe.
     retyped_text = params[:retyped_text].to_s
     difficulty = params[:self_described_difficulty].to_s
     time_taken = params[:time_taken_seconds].to_f
@@ -34,6 +35,7 @@ class ProfilesController < ApplicationController
       return
     end
 
+    # Keep this tiny: one profile flag controls how intense formatting gets.
     profile = (current_user.profile || {}).deep_dup
     profile["readability_mode"] = mode
     current_user.update!(profile: profile)

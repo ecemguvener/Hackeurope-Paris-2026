@@ -63,6 +63,7 @@ module ApplicationHelper
     return "" if raw_text.blank?
 
     escaped = ERB::Util.html_escape(raw_text)
+    # Strong mode = extra visual help; standard mode keeps it clean/simple.
     highlighted = dyslexia_strong_mode?(user) ? highlight_keywords(escaped) : escaped
     simple_format(highlighted, {}, sanitize: false)
   end
@@ -71,6 +72,7 @@ module ApplicationHelper
 
   # Heuristic keyword emphasis: highlight a few longer repeated terms to improve scanning.
   def highlight_keywords(escaped_text)
+    # First pass: find meaningful words that repeat (usually topic words).
     words = escaped_text.scan(/\b[A-Za-z][A-Za-z'-]{5,}\b/)
     frequencies = words.each_with_object(Hash.new(0)) do |word, acc|
       normalized = word.downcase
@@ -79,6 +81,7 @@ module ApplicationHelper
       acc[normalized] += 1
     end
 
+    # Prefer repeated + longer terms so the bolding feels intentional, not noisy.
     selected_terms = frequencies
       .select { |_word, count| count >= 2 }
       .sort_by { |word, count| [ -count, -word.length ] }
