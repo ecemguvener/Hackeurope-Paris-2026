@@ -16,6 +16,13 @@ RSpec.describe SuperpositionRunner do
       expect(result[:candidates].all? { |c| c[:content].present? }).to be(true)
     end
 
+    it "can generate only one requested style" do
+      result = described_class.call("A short paragraph for testing.", user, styles: [ "plain_language" ])
+
+      expect(result[:candidates].size).to eq(1)
+      expect(result[:candidates].first[:style]).to eq("plain_language")
+    end
+
     it "auto-recommends bullet points for dense text" do
       dense_text = "This is a very long and complicated sentence with many clauses and terms that raises cognitive load significantly for the reader while also introducing technical language, multiple nested qualifiers, and several context switches that make quick scanning difficult for many users. " \
         "Another sentence continues in a similarly dense way to keep average sentence length high with additional complexity, long phrase chains, and abstract wording that increases processing load."

@@ -57,8 +57,9 @@ class DocumentsController < ApplicationController
         }
       ])
 
-      # Call SuperpositionRunner to generate the 4 adapted versions and save them
-      result = SuperpositionRunner.call(@document, current_user)
+      # Agent picks one style based on onboarding/profile/history, then generates only that style.
+      recommended_style = SuperpositionRunner.recommend_style(@document, current_user)
+      result = SuperpositionRunner.call(@document, current_user, styles: [ recommended_style ])
       transformations = {}
       result[:candidates].each do |candidate|
         transformations[candidate[:style]] = { "content" => candidate[:content] }
@@ -70,7 +71,8 @@ class DocumentsController < ApplicationController
       }
       @document.update!(transformations: transformations)
 
-      redirect_to results_path(@document)
+      CollapseRunner.call(@document, recommended_style, {})
+      redirect_to collapsed_show_path(@document)
     else
       flash.now[:alert] = "Something went wrong. Please try again."
       render :new, status: :unprocessable_entity

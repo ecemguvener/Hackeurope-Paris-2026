@@ -11,7 +11,7 @@ class SuperpositionRunner
 
   # Returns 4 candidate transformations and an autonomous recommendation.
   # Accepts either a Document or raw text.
-  def self.call(document_or_text, user = nil)
+  def self.call(document_or_text, user = nil, styles: nil)
     text = source_text(document_or_text)
     return { candidates: [], recommended_style: "simplified", metrics: density_metrics("") } if text.blank?
 
@@ -20,7 +20,10 @@ class SuperpositionRunner
     recommended = decision[:recommended_style]
     personalization = personalization_instructions(user)
 
-    candidates = STYLE_KEYS.map do |style_key|
+    requested_styles = Array(styles).map(&:to_s).presence || STYLE_KEYS
+    candidates = requested_styles.filter_map do |style_key|
+      next unless STYLE_KEYS.include?(style_key)
+
       prompt = build_prompt(style_key, text, personalization)
       content = call_llm(prompt, style_key: style_key, text: text)
       {
