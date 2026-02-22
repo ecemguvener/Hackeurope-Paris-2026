@@ -1,0 +1,12 @@
+# frozen_string_literal: true
+
+source "https://rubygems.org"
+
+ruby ">= 3.1"
+
+# OpenTelemetry: SDK + OTLP HTTP/protobuf exporter
+gem "opentelemetry-sdk",           "~> 1.4"
+gem "opentelemetry-exporter-otlp", "~> 0.26"
+
+# Anthropic Claude (same gem already in the Rails project)
+gem "anthropic", "~> 1.0"
