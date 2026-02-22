@@ -6,11 +6,10 @@ class ReadingTestAnalyser
   # Main function - Person 1 calls this when the user submits the reading test form
   # It receives: who the user is, what they typed, what they said their difficulty is, how long they took
   def self.call(user, retyped_text:, self_described_difficulty:, time_taken_seconds:)
-
     # Step 1: Compare what they typed vs the original sentence to find mistakes
     typo_analysis = analyse_retype(retyped_text)
 
-    # Step 2: Build a prompt for the Claude with all the test results to give it to Claude API 
+    # Step 2: Build a prompt for the Claude with all the test results to give it to Claude API
     prompt = <<~PROMPT
       A user just completed a reading test. Analyse their results and return a JSON profile.
 
@@ -40,12 +39,12 @@ class ReadingTestAnalyser
     # Step 4: Parse Claude's response from text into a Ruby hash
     parsed = JSON.parse(result)
 
-    #5: Save the profile to the user in the database so it persists
+    # 5: Save the profile to the user in the database so it persists
     user.profile.merge!(parsed)
     user.preferred_style = parsed["recommended_style"]
     user.save
 
-    # Return the parsed profile so Person 1 can use it on the next page
+    # Return the parsed profile so Person 1 can use it on the next pag
     parsed
   end
 
@@ -62,7 +61,7 @@ class ReadingTestAnalyser
     skipped_words = original_words - retyped_words
 
     # Return the result as a hash so that we can remmeber the position in the list 
-    # {} is hash 
+    # {} is hash
     { skipped_words: skipped_words }
   end
 
@@ -72,7 +71,7 @@ class ReadingTestAnalyser
     response = client.messages(
       model: "claude-sonnet-4-6",
       max_tokens: 512,
-      messages: [{ role: "user", content: prompt }]
+      messages: [ { role: "user", content: prompt } ]
     )
     response.content.first.text
   rescue => e
@@ -86,5 +85,4 @@ class ReadingTestAnalyser
       "assessment"          => "Could not analyse at this time. Defaulting to bullet style."
     })
   end
-
 end

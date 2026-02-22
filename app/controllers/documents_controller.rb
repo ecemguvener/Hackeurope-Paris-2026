@@ -53,17 +53,17 @@ class DocumentsController < ApplicationController
 
   def select_version
     @document = current_user.documents.find(params[:id])
-    version = params[:version].to_i
+    requested_version = params[:version].to_i
+    style_key = style_key_from_version(requested_version)
 
-    unless version.between?(1, Document::TRANSFORMATION_STYLES.length)
+    unless style_key
       redirect_to results_path(@document), alert: "Invalid version selection."
       return
     end
 
-    @document.update!(selected_version: version)
+    signals = collapse_signals_from_params
 
-    style = @document.selected_style
-    current_user.update!(preferred_style: style[:title]) if style
+    CollapseRunner.call(@document, style_key, signals)
 
     redirect_to collapsed_show_path(@document)
   end
@@ -108,5 +108,18 @@ class DocumentsController < ApplicationController
   rescue => e
     Rails.logger.error("TextExtractor failed: #{e.message}")
     [ nil, nil ]
+  end
+
+  def style_key_from_version(version)
+    return nil unless version.between?(1, Document::TRANSFORMATION_STYLES.length)
+
+    Document::TRANSFORMATION_STYLES[version - 1][:key]
+  end
+
+  def collapse_signals_from_params
+    {
+      dwell_ms: params[:dwell_ms],
+      tts_style: params[:tts_style]
+    }.compact
   end
 end
