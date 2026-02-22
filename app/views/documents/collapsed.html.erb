@@ -2,8 +2,8 @@
   <%= render "shared/breadcrumbs", current_step: 3 %>
   <div class="text-center mb-8">
     <%# Celebration checkmark %>
-    <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-emerald-500 shadow-lg shadow-green-500/30 mb-4 animate-celebrate">
-      <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+    <div class="inline-flex items-center justify-center w-14 h-14 rounded-full bg-emerald-500 shadow-lg shadow-green-500/30 mb-4 animate-celebrate">
+      <svg width="28" height="28" class="text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
       </svg>
     </div>
@@ -11,14 +11,14 @@
     <% if @document.selected_style %>
       <p class="text-lg text-indigo-600 font-semibold animate-fade-in-up delay-200">You chose: <%= @document.selected_style[:title] %></p>
     <% end %>
-    <div class="mt-3 flex items-center justify-center gap-2">
-      <span class="text-xs uppercase tracking-wide text-gray-500">Accessibility</span>
+    <div class="mt-3 flex items-center justify-center gap-3">
+      <span class="text-sm font-medium text-gray-600">Accessibility:</span>
       <%= button_to "Standard", profile_readability_path(mode: "standard"), method: :patch,
-            form: { class: "inline" },
-            class: "text-xs px-3 py-1 rounded-full border #{dyslexia_strong_mode?(current_user) ? 'border-gray-300 text-gray-600' : 'border-indigo-300 bg-indigo-50 text-indigo-700'}" %>
+            form: { style: "display:inline" },
+            class: "text-sm font-semibold px-5 py-2 rounded-lg border-2 cursor-pointer transition-colors #{dyslexia_strong_mode?(current_user) ? 'border-gray-300 text-gray-700 hover:bg-gray-50' : 'border-indigo-400 bg-indigo-50 text-indigo-700'}" %>
       <%= button_to "Strong", profile_readability_path(mode: "strong"), method: :patch,
-            form: { class: "inline" },
-            class: "text-xs px-3 py-1 rounded-full border #{dyslexia_strong_mode?(current_user) ? 'border-indigo-300 bg-indigo-50 text-indigo-700' : 'border-gray-300 text-gray-600'}" %>
+            form: { style: "display:inline" },
+            class: "text-sm font-semibold px-5 py-2 rounded-lg border-2 cursor-pointer transition-colors #{dyslexia_strong_mode?(current_user) ? 'border-indigo-400 bg-indigo-50 text-indigo-700' : 'border-gray-300 text-gray-700 hover:bg-gray-50'}" %>
     </div>
   </div>
 
@@ -33,7 +33,7 @@
     <div class="rounded-2xl border p-5 mb-6 animate-fade-in-up delay-200"
          style="background-color: var(--color-accent-light, #eef2ff); border-color: var(--color-border);">
       <div class="flex items-center gap-2 mb-2">
-        <svg class="w-5 h-5 text-indigo-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+        <svg width="20" height="20" class="text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
         </svg>
         <h3 class="font-semibold text-sm" style="color: var(--color-text);">Quick Summary</h3>
@@ -54,10 +54,10 @@
     <div class="px-6 py-5">
       <div data-toggle-target="transformed"
            data-controller="reading-highlight"
-           class="prose max-w-none text-gray-800 <%= dyslexia_reading_classes(current_user) %> p-5">
+           class="max-w-none text-gray-800 <%= dyslexia_reading_classes(current_user) %> p-5">
         <%= dyslexia_reading_html(@document.selected_content || "Transformation content will appear here.", current_user) %>
       </div>
-      <div data-toggle-target="original" class="hidden prose max-w-none bg-amber-50 rounded-lg p-4 text-gray-700">
+      <div data-toggle-target="original" class="hidden max-w-none bg-amber-50 rounded-lg p-4 text-gray-700">
         <%= simple_format(@document.original_content || @document.extracted_text || "No original content available.") %>
       </div>
     </div>
@@ -65,11 +65,11 @@
     <div class="px-6 pb-5 flex items-center gap-3">
       <button data-toggle-target="button"
               data-action="toggle#toggle"
-              class="text-sm text-indigo-600 font-medium py-2 px-4 rounded-lg border border-indigo-200 hover:bg-indigo-50 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+              class="text-base text-indigo-600 font-semibold py-3 px-6 rounded-lg border-2 border-indigo-200 hover:bg-indigo-50 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
         Show Original
       </button>
       <button data-action="accessibility#toggleFocusMode"
-              class="text-sm font-medium py-2 px-4 rounded-lg border border-purple-200 text-purple-600 hover:bg-purple-50 transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2">
+              class="text-base font-semibold py-3 px-6 rounded-lg border-2 border-purple-200 text-purple-600 hover:bg-purple-50 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2">
         Focus Mode
       </button>
     </div>
@@ -78,7 +78,7 @@
   <%# Text-to-Speech panel %>
   <div class="bg-white rounded-2xl shadow-md border border-gray-200 p-6 mb-6" data-controller="tts">
     <div class="flex items-center gap-3 mb-4">
-      <svg class="w-5 h-5 text-indigo-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+      <svg width="20" height="20" class="text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
               d="M15.536 8.464a5 5 0 010 7.072M12 6a7 7 0 010 12M9 9a3 3 0 000 6"/>
       </svg>
@@ -96,12 +96,12 @@
       </audio>
 
       <%# Playback speed controls %>
-      <div class="flex items-center gap-2 mb-5" role="group" aria-label="Playback speed">
-        <span class="text-sm text-gray-600 font-medium mr-1">Speed:</span>
+      <div class="flex items-center gap-3 mb-5" role="group" aria-label="Playback speed">
+        <span class="text-sm text-gray-600 font-semibold">Speed:</span>
         <% { "Slow" => 0.7, "Normal" => 1.0, "Fast" => 1.3 }.each do |label, rate| %>
           <button data-action="tts#setSpeed"
                   data-tts-speed-param="<%= rate %>"
-                  class="text-sm px-3 py-1 rounded-lg border border-gray-200 hover:bg-indigo-50 hover:border-indigo-300 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 <%= rate == 1.0 ? 'bg-indigo-100 border-indigo-400 text-indigo-700' : 'text-gray-700' %>">
+                  class="text-sm font-semibold px-4 py-2 rounded-lg border-2 cursor-pointer hover:bg-indigo-50 hover:border-indigo-300 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 <%= rate == 1.0 ? 'bg-indigo-100 border-indigo-400 text-indigo-700' : 'border-gray-200 text-gray-700' %>">
             <%= label %>
           </button>
         <% end %>
@@ -109,14 +109,14 @@
 
       <%# Regenerate with a different voice %>
       <%= form_with url: generate_speech_path(@document), method: :post, class: "flex items-center gap-3 flex-wrap" do |f| %>
-        <label for="voice-select" class="text-sm text-gray-600 font-medium">Change voice:</label>
+        <label for="voice-select" class="text-sm text-gray-600 font-semibold">Change voice:</label>
         <%= f.select :voice,
               TTSService::VOICES.keys.map { |v| [ v.capitalize, v ] },
               {},
               id: "voice-select",
-              class: "text-sm border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-500" %>
+              class: "text-sm border-2 border-gray-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" %>
         <%= f.submit "Regenerate",
-              class: "text-sm text-indigo-600 font-medium py-1.5 px-4 rounded-lg border border-indigo-200 hover:bg-indigo-50 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2" %>
+              class: "text-sm text-indigo-600 font-semibold py-2 px-5 rounded-lg border-2 border-indigo-200 hover:bg-indigo-50 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2" %>
       <% end %>
 
     <% else %>
@@ -127,12 +127,12 @@
       </p>
 
       <%= form_with url: generate_speech_path(@document), method: :post, class: "flex items-center gap-3 flex-wrap" do |f| %>
-        <label for="voice-select" class="text-sm text-gray-600 font-medium">Voice:</label>
+        <label for="voice-select" class="text-sm text-gray-600 font-semibold">Voice:</label>
         <%= f.select :voice,
               TTSService::VOICES.keys.map { |v| [ v.capitalize, v ] },
               {},
               id: "voice-select",
-              class: "text-sm border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-500" %>
+              class: "text-sm border-2 border-gray-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" %>
         <%= f.submit "Generate Speech",
               class: "text-sm text-white font-semibold py-2 px-5 rounded-lg bg-indigo-600 hover:bg-indigo-500 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2" %>
       <% end %>
@@ -144,8 +144,8 @@
   <%# Navigation %>
   <div class="flex items-center justify-between animate-fade-in-up delay-400">
     <%= link_to "Back to All Versions", results_path(@document),
-          class: "text-indigo-600 font-medium hover:text-indigo-500 transition-colors" %>
+          class: "inline-block text-base text-indigo-600 font-semibold py-3 px-6 rounded-xl border-2 border-indigo-200 hover:bg-indigo-50 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2" %>
     <%= link_to "Upload New Document", upload_path,
-          class: "inline-block text-white font-semibold py-2 px-6 rounded-xl bg-indigo-700 hover:bg-indigo-600 shadow-lg hover:shadow-xl transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2" %>
+          class: "inline-block text-base text-white font-semibold py-3 px-6 rounded-xl bg-indigo-700 hover:bg-indigo-600 transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2" %>
   </div>
 </div>

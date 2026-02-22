@@ -1,11 +1,28 @@
 @import "tailwindcss";
 
-/* ── Default font, weight & spacing: OpenDyslexic everywhere ─ */
+/* ── Default font: OpenDyslexic everywhere ─ */
 html, body {
   font-family: "Open Dyslexic", "OpenDyslexic", "Atkinson Hyperlegible", "Verdana", sans-serif !important;
-  font-weight: 500 !important;
-  line-height: 1.8 !important;
+}
+
+/* ── Enhanced readability for text content only (not buttons/icons/nav) ─ */
+p, li, td, th, dd, dt, blockquote, figcaption, label,
+.prose, .dyslexia-content, .sp-output {
+  font-weight: 500;
+  line-height: 1.8;
   letter-spacing: 0.01em;
+}
+
+/* ── Constrain SVG icons — never inherit text sizing ─ */
+svg {
+  flex-shrink: 0;
+  max-width: 100%;
+  height: auto;
+}
+
+/* ── button_to forms must be inline in flex containers ─ */
+form.inline, form[style*="display:inline"] {
+  display: inline !important;
 }
 
 /* ── Protect white text on dark backgrounds ──────────────── */
