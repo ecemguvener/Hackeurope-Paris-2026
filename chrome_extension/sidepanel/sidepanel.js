@@ -136,6 +136,10 @@
       if (pageContext.selectedText) {
         transformInput.value = pageContext.selectedText;
         charCount.textContent = pageContext.selectedText.length;
+      } else if (pageContext.pageText) {
+        // If nothing is selected, prefill with the full extracted page text from the FAB click.
+        transformInput.value = pageContext.pageText;
+        charCount.textContent = pageContext.pageText.length;
       }
     } else {
       // Try to get from active tab
@@ -149,6 +153,9 @@
             if (response.selectedText) {
               transformInput.value = response.selectedText;
               charCount.textContent = response.selectedText.length;
+            } else if (response.pageText) {
+              transformInput.value = response.pageText;
+              charCount.textContent = response.pageText.length;
             }
           }
         }
