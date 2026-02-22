@@ -8,7 +8,7 @@
     </div>
     <h1 class="text-4xl font-bold text-gray-900 mb-2 animate-fade-in-up delay-100">Your Optimized Content</h1>
     <% if @document.selected_style %>
-      <p class="text-lg text-indigo-600 font-semibold animate-fade-in-up delay-200">Personalized style selected for you: <%= @document.selected_style[:title] %></p>
+      <p class="text-lg text-indigo-600 font-semibold animate-fade-in-up delay-200">You chose: <%= @document.selected_style[:title] %></p>
     <% end %>
   </div>
 
@@ -22,8 +22,8 @@
     </div>
 
     <div class="px-6 py-5">
-      <div data-toggle-target="transformed" class="prose max-w-none text-gray-800">
-        <%= simple_format(@document.selected_content || "Transformation content will appear here.") %>
+      <div data-toggle-target="transformed" class="prose max-w-none text-gray-800 dyslexia-content dyslexia-surface <%= dyslexia_background_class(current_user) %> p-5">
+        <%= dyslexia_reading_html(@document.selected_content || "Transformation content will appear here.") %>
       </div>
       <div data-toggle-target="original" class="hidden prose max-w-none bg-amber-50 rounded-lg p-4 text-gray-700">
         <%= simple_format(@document.original_content || @document.extracted_text || "No original content available.") %>
@@ -107,7 +107,7 @@
 
   <%# Navigation %>
   <div class="flex items-center justify-between animate-fade-in-up delay-400">
-    <%= link_to "See All Styles (Optional)", results_path(@document),
+    <%= link_to "Back to All Versions", results_path(@document),
           class: "text-indigo-600 font-medium hover:text-indigo-500 transition-colors" %>
     <%= link_to "Upload New Document", upload_path,
           class: "inline-block text-white font-semibold py-2 px-6 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 shadow-lg hover:shadow-xl transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2" %>

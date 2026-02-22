@@ -16,7 +16,7 @@ RSpec.describe "Documents", type: :request do
     context "with a valid text file" do
       let(:file) { fixture_file_upload("test.txt", "text/plain") }
 
-      it "creates a document and redirects to personalized collapsed view" do
+      it "creates a document and redirects to results" do
         expect {
           post upload_path, params: { document: { file: file } }
         }.to change(Document, :count).by(1)
@@ -26,38 +26,35 @@ RSpec.describe "Documents", type: :request do
         expect(document.extracted_text).to include("sample text")
         expect(document.content_hash).to be_present
         expect(document.user).to eq(user)
-        expect(document.selected_version).to be_present
-        expect(response).to redirect_to(collapsed_show_path(document))
+        expect(response).to redirect_to(results_path(document))
       end
     end
 
     context "with a valid PDF file" do
       let(:file) { fixture_file_upload("test.pdf", "application/pdf") }
 
-      it "creates a document and redirects to personalized collapsed view" do
+      it "creates a document and redirects to results" do
         expect {
           post upload_path, params: { document: { file: file } }
         }.to change(Document, :count).by(1)
 
         document = Document.last
         expect(document.file).to be_attached
-        expect(document.selected_version).to be_present
-        expect(response).to redirect_to(collapsed_show_path(document))
+        expect(response).to redirect_to(results_path(document))
       end
     end
 
     context "with a valid image file" do
       let(:file) { fixture_file_upload("test.png", "image/png") }
 
-      it "creates a document and redirects to personalized collapsed view" do
+      it "creates a document and redirects to results" do
         expect {
           post upload_path, params: { document: { file: file } }
         }.to change(Document, :count).by(1)
 
         document = Document.last
         expect(document.file).to be_attached
-        expect(document.selected_version).to be_present
-        expect(response).to redirect_to(collapsed_show_path(document))
+        expect(response).to redirect_to(results_path(document))
       end
     end
 
@@ -110,10 +107,12 @@ RSpec.describe "Documents", type: :request do
       it "renders 4 transformation cards with content" do
         get results_path(document)
         expect(response).to have_http_status(:ok)
-        expect(response.body).to include("Simple version of the text.")
+        expect(response.body).to include("Simple")
+        expect(response.body).to include("version")
         expect(response.body).to include("Point one")
-        expect(response.body).to include("Easy to read version.")
-        expect(response.body).to include("Reorganized text here.")
+        expect(response.body).to include("Easy to read")
+        expect(response.body).to include("Reorganized")
+        expect(response.body).to include("text here")
       end
 
       it "includes toggle buttons for original content" do
@@ -199,8 +198,10 @@ RSpec.describe "Documents", type: :request do
       it "renders the collapsed view with the selected version" do
         get collapsed_show_path(document)
         expect(response).to have_http_status(:ok)
-        expect(response.body).to include("Personalized style selected for you: Simplified")
-        expect(response.body).to include("Simplified corporate text.")
+        expect(response.body).to include("You chose: Simplified")
+        expect(response.body).to include("Simplified")
+        expect(response.body).to include("corporate")
+        expect(response.body).to include("text")
       end
 
       it "includes original content via toggle" do
@@ -211,7 +212,7 @@ RSpec.describe "Documents", type: :request do
 
       it "includes navigation links" do
         get collapsed_show_path(document)
-        expect(response.body).to include("See All Styles (Optional)")
+        expect(response.body).to include("Back to All Versions")
         expect(response.body).to include("Upload New Document")
       end
     end

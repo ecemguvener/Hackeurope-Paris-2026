@@ -9,8 +9,8 @@ class SuperpositionRunner
   DENSE_AVG_WORDS_PER_SENTENCE = 22.0
   STYLE_KEYS = Document.style_keys.freeze
 
-  # Returns 4 candidate transformations and an autonomous recommendation.
-  # Accepts either a Document or raw text.
+  # Returns candidate transformations and an autonomous recommendation.
+  # Uses one LLM call to generate all requested styles.
   def self.call(document_or_text, user = nil, styles: nil)
     text = source_text(document_or_text)
     return { candidates: [], recommended_style: "simplified", metrics: density_metrics("") } if text.blank?
@@ -21,15 +21,18 @@ class SuperpositionRunner
     personalization = personalization_instructions(user)
 
     requested_styles = Array(styles).map(&:to_s).presence || STYLE_KEYS
+    bulk_prompt = build_bulk_prompt(text, personalization, requested_styles)
+    style_outputs = call_llm_bulk(bulk_prompt, requested_styles: requested_styles, text: text)
+
     candidates = requested_styles.filter_map do |style_key|
       next unless STYLE_KEYS.include?(style_key)
 
-      prompt = build_prompt(style_key, text, personalization)
-      content = call_llm(prompt, style_key: style_key, text: text)
+      content = style_outputs[style_key].to_s
+      content = fallback_transform(style_key, text) if content.blank?
       {
         style: style_key,
         title: Document.style_for_key(style_key)&.dig(:title) || style_key.humanize,
-        prompt: prompt,
+        prompt: bulk_prompt,
         content: normalize_output(content)
       }
     end
@@ -151,8 +154,10 @@ class SuperpositionRunner
     lines
   end
 
-  def self.build_prompt(style_key, text, personalization_lines)
+  def self.build_bulk_prompt(text, personalization_lines, requested_styles)
     personalization = personalization_lines.map { |line| "- #{line}" }.join("\n")
+    styles_json_shape = requested_styles.map { |style| %("#{style}": "...") }.join(",\n")
+
     <<~PROMPT
       User-specific accessibility instructions:
       #{personalization}
@@ -162,25 +167,49 @@ class SuperpositionRunner
       - Do not include markdown symbols like #, ##, **, *, or backticks.
       - Do not include prefaces like "Here is the rewritten version".
       - Keep only the transformed content.
+      - Return one valid JSON object only (no markdown fences, no extra text).
+      - JSON must have exactly these keys:
+      {
+      #{styles_json_shape}
+      }
 
-      #{PROMPT_TEMPLATES.fetch(style_key) % text}
+      Rewrite this source text into the requested accessibility formats:
+      #{requested_styles.map { |style| "- #{style}: #{PROMPT_TEMPLATES.fetch(style) % "%SOURCE_TEXT%" }" }.join("\n")}
+
+      SOURCE_TEXT:
+      #{text}
     PROMPT
   end
 
-  def self.call_llm(prompt, style_key:, text:)
+  def self.call_llm_bulk(prompt, requested_styles:, text:)
     api_key = ENV["ANTHROPIC_API_KEY"]
     raise "Missing ANTHROPIC_API_KEY" if api_key.blank?
 
     client = Anthropic::Client.new(api_key: api_key)
     response = client.messages.create(
       model: "claude-sonnet-4-6",
-      max_tokens: 1024,
+      max_tokens: 2200,
       messages: [ { role: "user", content: prompt } ]
     )
-    response.content.first.text.to_s.strip
+    raw = response.content.first.text.to_s
+    parsed = parse_style_json(raw)
+
+    requested_styles.index_with do |style_key|
+      parsed[style_key].to_s.presence || fallback_transform(style_key, text)
+    end
   rescue => e
     Rails.logger.error("SuperpositionRunner Claude error: #{e.message}")
-    fallback_transform(style_key, text)
+    requested_styles.index_with { |style_key| fallback_transform(style_key, text) }
+  end
+
+  def self.parse_style_json(raw)
+    json_str = raw.to_s.strip
+    json_str = json_str.gsub(/\A```(?:json)?\s*/i, "").gsub(/\s*```\z/, "")
+    first = json_str.index("{")
+    last = json_str.rindex("}")
+    raise JSON::ParserError, "No JSON object found" unless first && last
+
+    JSON.parse(json_str[first..last])
   end
 
   def self.fallback_transform(style_key, text)

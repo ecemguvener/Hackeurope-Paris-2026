@@ -48,9 +48,9 @@ RSpec.describe "Results and collapse flow", type: :system do
     document_with_transforms.update!(selected_version: 2)
     visit collapsed_show_path(document_with_transforms)
 
-    expect(page).to have_content("Personalized style selected for you: Bullet Points")
+    expect(page).to have_content("You chose: Bullet Points")
     expect(page).to have_content("Point one")
-    expect(page).to have_link("See All Styles (Optional)")
+    expect(page).to have_link("Back to All Versions")
     expect(page).to have_link("Upload New Document")
   end
 

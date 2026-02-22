@@ -5,7 +5,14 @@ RSpec.describe SuperpositionRunner do
 
   describe ".call" do
     before do
-      allow(described_class).to receive(:call_llm).and_return("transformed text")
+      allow(described_class).to receive(:call_llm_bulk).and_return(
+        {
+          "simplified" => "transformed text",
+          "bullet_points" => "transformed text",
+          "plain_language" => "transformed text",
+          "restructured" => "transformed text"
+        }
+      )
     end
 
     it "returns 4 style candidates" do
@@ -17,6 +24,7 @@ RSpec.describe SuperpositionRunner do
     end
 
     it "can generate only one requested style" do
+      allow(described_class).to receive(:call_llm_bulk).and_return({ "plain_language" => "transformed text" })
       result = described_class.call("A short paragraph for testing.", user, styles: [ "plain_language" ])
 
       expect(result[:candidates].size).to eq(1)

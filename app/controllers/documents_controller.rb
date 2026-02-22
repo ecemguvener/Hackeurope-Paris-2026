@@ -57,9 +57,8 @@ class DocumentsController < ApplicationController
         }
       ])
 
-      # Agent picks one style based on onboarding/profile/history, then generates only that style.
-      recommended_style = SuperpositionRunner.recommend_style(@document, current_user)
-      result = SuperpositionRunner.call(@document, current_user, styles: [ recommended_style ])
+      # Single LLM call returns all 4 dyslexia-friendly formats.
+      result = SuperpositionRunner.call(@document, current_user)
       transformations = {}
       result[:candidates].each do |candidate|
         transformations[candidate[:style]] = { "content" => candidate[:content] }
@@ -71,8 +70,7 @@ class DocumentsController < ApplicationController
       }
       @document.update!(transformations: transformations)
 
-      CollapseRunner.call(@document, recommended_style, {})
-      redirect_to collapsed_show_path(@document)
+      redirect_to results_path(@document)
     else
       flash.now[:alert] = "Something went wrong. Please try again."
       render :new, status: :unprocessable_entity

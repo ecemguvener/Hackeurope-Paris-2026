@@ -8,3 +8,22 @@
  *
  * Consider organizing styles into separate files for maintainability.
  */
+
+.dyslexia-surface {
+  border: 1px solid #ead7b8;
+  border-radius: 0.75rem;
+}
+
+.dyslexia-content {
+  font-size: 1.18rem;
+  line-height: 1.95;
+  letter-spacing: 0.012em;
+  word-spacing: 0.08em;
+}
+
+.dys-keyword {
+  font-weight: 800;
+  color: #1f2937;
+  background: linear-gradient(transparent 62%, #fef08a 0);
+  border-radius: 0.15rem;
+}
