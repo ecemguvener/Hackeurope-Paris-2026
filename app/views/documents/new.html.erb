@@ -30,11 +30,19 @@
         <%= form_with url: profile_assessment_path, method: :post, data: { controller: "reading-test", action: "submit->reading-test#stamp" } do |f| %>
           <%= hidden_field_tag :return_to, upload_path %>
           <div class="space-y-3">
-            <%= f.text_area :retyped_text, rows: 2, required: true, placeholder: "Retype the sentence here...",
-                  data: { action: "input->reading-test#track", reading_test_target: "retyped" },
-                  class: "w-full rounded-lg border border-gray-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" %>
-            <%= f.text_area :self_described_difficulty, rows: 2, required: true, placeholder: "What felt difficult?",
-                  class: "w-full rounded-lg border border-gray-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" %>
+            <div>
+              <%= f.label :retyped_text, "Retype the sentence", class: "mb-1 block text-sm font-medium text-gray-700" %>
+              <p id="retyped-help" class="mb-2 text-xs text-gray-500">Use the sentence shown above, then submit to continue.</p>
+              <%= f.text_area :retyped_text, rows: 2, required: true, placeholder: "Retype the sentence here...",
+                    aria: { describedby: "retyped-help" },
+                    data: { action: "input->reading-test#track", reading_test_target: "retyped" },
+                    class: "w-full rounded-lg border border-gray-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" %>
+            </div>
+            <div>
+              <%= f.label :self_described_difficulty, "What felt difficult?", class: "mb-1 block text-sm font-medium text-gray-700" %>
+              <%= f.text_area :self_described_difficulty, rows: 2, required: true, placeholder: "Example: words blurred, hard to track lines, too dense text...",
+                    class: "w-full rounded-lg border border-gray-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" %>
+            </div>
           </div>
 
           <%= f.hidden_field :time_taken_seconds, value: 1, data: { reading_test_target: "time" } %>
@@ -66,11 +74,12 @@
           accept=".txt,.pdf,.png,.jpg,.jpeg"
           class="sr-only"
           data-dropzone-target="input"
-          onchange="document.getElementById('file-name').textContent = this.files[0]?.name || ''"
+          data-action="change->dropzone#change"
           <%= "disabled" unless @assessment_completed %>
         >
         <p class="text-sm text-gray-400 mt-2">.txt, .pdf, .png, .jpg up to 10MB</p>
-        <p id="file-name" class="text-sm text-indigo-600 font-medium mt-2" data-dropzone-target="filename"></p>
+        <p id="file-name" class="text-sm text-indigo-600 font-medium mt-2" data-dropzone-target="filename" aria-live="polite"></p>
+        <p class="hidden text-sm text-red-600 font-medium mt-2" data-dropzone-target="error" aria-live="polite"></p>
       </div>
 
       <% unless @assessment_completed %>

@@ -286,3 +286,18 @@ body::after {
   pointer-events: none;
   z-index: 9998;
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in,
+  .animate-fade-in-up,
+  .animate-celebrate,
+  .animate-blob {
+    animation: none !important;
+  }
+
+  .hover-lift,
+  .hover-lift:hover {
+    transition: none !important;
+    transform: none !important;
+  }
+}
